@@ -4,7 +4,7 @@ import { nextCookies } from "better-auth/next-js";
 import { organization } from "better-auth/plugins/organization";
 import { db } from "@/lib/db";
 import { actionEmail, sendEmail } from "@/lib/email";
-import { env, isProduction } from "@/lib/env";
+import { emailDeliveryAvailable, env, isProduction } from "@/lib/env";
 
 if (isProduction && !env.BETTER_AUTH_SECRET && process.env.NEXT_PHASE !== "phase-production-build") {
   throw new Error("BETTER_AUTH_SECRET mancante");
@@ -17,6 +17,7 @@ export const auth = betterAuth({
   database: prismaAdapter(db, { provider: "postgresql" }),
   emailAndPassword: {
     enabled: true,
+    disableSignUp: !emailDeliveryAvailable,
     requireEmailVerification: true,
     minPasswordLength: 10,
     revokeSessionsOnPasswordReset: true,

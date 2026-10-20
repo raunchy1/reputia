@@ -12,3 +12,6 @@ const schema = z.object({
 export const env = schema.parse(process.env);
 
 export const isProduction = env.NODE_ENV === "production";
+
+/** Verification and reset emails cannot be delivered, so new sign-ups would be stranded. */
+export const emailDeliveryAvailable = Boolean(env.SMTP_URL) || !isProduction;
