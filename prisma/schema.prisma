@@ -2,57 +2,362 @@ generator client {
   provider = "prisma-client"
   output   = "../lib/generated/prisma"
 }
+
 datasource db {
   provider = "postgresql"
 }
-model Organization {
-  id String @id @default(cuid())
-  name String
-  createdAt DateTime @default(now())
-  locations Location[]
-  members Membership[]
-}
+
+// ─── Authentication (Better Auth core + organization plugin) ────────────────
+// Field names are dictated by Better Auth; regenerate with `npx auth generate`.
+
 model User {
-  id String @id @default(cuid())
-  email String @unique
-  name String?
-  createdAt DateTime @default(now())
-  memberships Membership[]
+  id            String       @id
+  name          String
+  email         String       @unique
+  emailVerified Boolean      @default(false)
+  image         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  members       Member[]
+  invitations   Invitation[]
+
+  @@map("user")
 }
-model Membership {
-  id String @id @default(cuid())
-  userId String
+
+model Session {
+  id                   String   @id
+  expiresAt            DateTime
+  token                String   @unique
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  ipAddress            String?
+  userAgent            String?
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activeOrganizationId String?
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model Organization {
+  id                String             @id
+  name              String
+  slug              String             @unique
+  logo              String?
+  createdAt         DateTime           @default(now())
+  metadata          String?
+  members           Member[]
+  invitations       Invitation[]
+  locations         Location[]
+  googleConnections GoogleConnection[]
+  reviews           Review[]
+  replyDrafts       ReplyDraft[]
+  subscription      Subscription?
+  auditLogs         AuditLog[]
+
+  @@map("organization")
+}
+
+model Member {
+  id             String       @id
   organizationId String
-  role String @default("OWNER")
-  user User @relation(fields: [userId], references: [id])
-  organization Organization @relation(fields: [organizationId], references: [id])
-  @@unique([userId, organizationId])
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           String       @default("member")
+  createdAt      DateTime     @default(now())
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("member")
 }
+
+model Invitation {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  role           String?
+  status         String       @default("pending")
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  inviterId      String
+  user           User         @relation(fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("invitation")
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+
+  @@map("rateLimit")
+}
+
+// ─── Reputia domain ─────────────────────────────────────────────────────────
+// Every tenant-owned row carries organizationId so queries can always be
+// scoped to the caller's verified membership.
+
+enum BusinessCategory {
+  RISTORANTE
+  PIZZERIA
+  BAR
+  HOTEL
+  BED_AND_BREAKFAST
+  CASA_VACANZE
+  PARRUCCHIERE
+  BARBIERE
+  CENTRO_ESTETICO
+  ALTRO
+}
+
+enum ReplyTone {
+  CORDIALE
+  CALOROSO
+  ELEGANTE
+  DIRETTO
+}
+
+enum ReplyLength {
+  BREVE
+  MEDIA
+  DETTAGLIATA
+}
+
+enum ReviewSource {
+  GOOGLE
+  MOCK
+}
+
+enum ReviewStatus {
+  NEW
+  DRAFT
+  APPROVED
+  PUBLISHED
+  FAILED
+  IGNORED
+}
+
+enum ConnectionProvider {
+  GOOGLE
+  MOCK
+}
+
+enum ConnectionStatus {
+  ACTIVE
+  NEEDS_RECONNECT
+  REVOKED
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  UNPAID
+  PAUSED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  DEMO_BOOKED
+  WON
+  LOST
+}
+
 model Location {
-  id String @id @default(cuid())
-  organizationId String
-  name String
-  googleLocationId String? @unique
-  language String @default("it")
-  tone String @default("cordiale e professionale")
-  businessContext String @default("")
-  autoReplyEnabled Boolean @default(false)
-  createdAt DateTime @default(now())
-  organization Organization @relation(fields: [organizationId], references: [id])
-  reviews Review[]
+  id                 String            @id @default(cuid())
+  organizationId     String
+  organization       Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name               String
+  category           BusinessCategory  @default(ALTRO)
+  city               String?
+  address            String?
+  connectionId       String?
+  connection         GoogleConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
+  /// Google resource name, e.g. "accounts/123/locations/456".
+  externalLocationId String?
+  tone               ReplyTone         @default(CORDIALE)
+  replyLength        ReplyLength       @default(MEDIA)
+  businessContext    String            @default("")
+  signature          String            @default("")
+  lastSyncedAt       DateTime?
+  archivedAt         DateTime?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  reviews            Review[]
+
+  @@unique([organizationId, externalLocationId])
+  @@index([organizationId])
 }
+
+model GoogleConnection {
+  id                String             @id @default(cuid())
+  organizationId    String
+  organization      Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider          ConnectionProvider
+  accountEmail      String?
+  /// AES-256-GCM ciphertext (see lib/crypto.ts). Never store tokens in clear.
+  accessTokenEnc    String?
+  refreshTokenEnc   String?
+  accessTokenExpiry DateTime?
+  scope             String?
+  status            ConnectionStatus   @default(ACTIVE)
+  lastError         String?
+  connectedById     String
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  locations         Location[]
+
+  @@index([organizationId])
+}
+
 model Review {
-  id String @id @default(cuid())
-  locationId String
-  googleReviewId String? @unique
-  author String
-  rating Int
-  comment String
-  createdAt DateTime @default(now())
-  status String @default("PENDING")
-  aiDraft String?
-  finalReply String?
-  publishedAt DateTime?
-  location Location @relation(fields: [locationId], references: [id])
-  @@index([locationId, createdAt])
+  id               String       @id @default(cuid())
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  locationId       String
+  location         Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  source           ReviewSource
+  /// Provider review resource name; unique per location.
+  externalId       String
+  authorName       String
+  authorPhotoUrl   String?
+  rating           Int
+  comment          String?
+  reviewedAt       DateTime
+  status           ReviewStatus @default(NEW)
+  replyText        String?
+  replyPublishedAt DateTime?
+  publishedById    String?
+  lastError        String?
+  syncedAt         DateTime     @default(now())
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  drafts           ReplyDraft[]
+
+  @@unique([locationId, externalId])
+  @@index([organizationId, status, reviewedAt])
+  @@index([organizationId, reviewedAt])
+}
+
+model ReplyDraft {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  reviewId       String
+  review         Review       @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  text           String
+  tone           ReplyTone
+  length         ReplyLength
+  provider       String
+  model          String
+  inputTokens    Int          @default(0)
+  outputTokens   Int          @default(0)
+  /// Estimated cost in millionths of a euro.
+  costMicros     Int          @default(0)
+  /// Safety checks that fired on the generated text (e.g. "promessa_rimborso").
+  flags          String[]     @default([])
+  createdById    String
+  createdAt      DateTime     @default(now())
+
+  @@index([reviewId, createdAt])
+  @@index([organizationId, createdAt])
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  organizationId       String             @unique
+  organization         Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String             @unique
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  status               SubscriptionStatus @default(INCOMPLETE)
+  quantity             Int                @default(1)
+  trialEndsAt          DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model StripeEvent {
+  id          String   @id
+  type        String
+  processedAt DateTime @default(now())
+}
+
+model AuditLog {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  actorUserId    String?
+  action         String
+  targetType     String?
+  targetId       String?
+  metadata       Json?
+  ipAddress      String?
+  createdAt      DateTime      @default(now())
+
+  @@index([organizationId, createdAt])
+}
+
+model Lead {
+  id                String            @id @default(cuid())
+  name              String
+  businessName      String
+  email             String
+  phone             String?
+  city              String?
+  category          BusinessCategory?
+  message           String?
+  privacyAcceptedAt DateTime
+  marketingConsent  Boolean           @default(false)
+  source            String            @default("sito")
+  status            LeadStatus        @default(NEW)
+  createdAt         DateTime          @default(now())
+
+  @@index([createdAt])
 }
