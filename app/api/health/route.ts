@@ -1,2 +1,18 @@
 import { NextResponse } from "next/server";
-export async function GET(){return NextResponse.json({status:"ok",service:"reputia",mode:"demo"});}
+import { db } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  let database: "ok" | "down" = "ok";
+  try {
+    await db.$queryRaw`SELECT 1`;
+  } catch {
+    database = "down";
+  }
+  const status = database === "ok" ? "ok" : "degraded";
+  return NextResponse.json(
+    { status, service: "reputia", database },
+    { status: database === "ok" ? 200 : 503, headers: { "Cache-Control": "no-store" } },
+  );
+}
