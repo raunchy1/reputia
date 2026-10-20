@@ -26,7 +26,7 @@ export function PasswordForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-4">
+    <form onSubmit={onSubmit} className="grid max-w-md gap-4">
       {state.error && <Notice tone="danger">{state.error}</Notice>}
       {state.ok && <Notice tone="positive">Password aggiornata. Gli altri dispositivi sono stati disconnessi.</Notice>}
       <Field label="Password attuale" htmlFor="currentPassword">

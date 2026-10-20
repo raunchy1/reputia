@@ -13,32 +13,75 @@ import { ProviderAuthError } from "@/lib/reviews/types";
 import { hasRole } from "@/lib/roles";
 import { ForbiddenError, type OrgContext } from "@/lib/session";
 
-export type InboxFilter = "da-gestire" | "bozze" | "pubblicate" | "negative" | "tutte";
+export const STATUS_FILTERS = {
+  "da-gestire": { label: "Da gestire", where: { status: { in: ["NEW", "FAILED"] } } },
+  bozze: { label: "Bozze pronte", where: { status: "DRAFT" } },
+  "da-approvare": { label: "Da approvare", where: { status: "APPROVED" } },
+  pubblicate: { label: "Pubblicate", where: { status: "PUBLISHED" } },
+  archiviate: { label: "Archiviate", where: { status: "IGNORED" } },
+  tutte: { label: "Tutte", where: {} },
+} satisfies Record<string, { label: string; where: Prisma.ReviewWhereInput }>;
+export type StatusFilter = keyof typeof STATUS_FILTERS;
 
-const FILTERS: Record<InboxFilter, Prisma.ReviewWhereInput> = {
-  "da-gestire": { status: { in: ["NEW", "DRAFT", "APPROVED", "FAILED"] } },
-  bozze: { status: { in: ["DRAFT", "APPROVED"] } },
-  pubblicate: { status: "PUBLISHED" },
-  negative: { rating: { lte: 2 } },
-  tutte: {},
-};
+export const RATING_FILTERS = {
+  negative: { label: "1–2 stelle", where: { rating: { lte: 2 } } },
+  neutre: { label: "3 stelle", where: { rating: 3 } },
+  positive: { label: "4–5 stelle", where: { rating: { gte: 4 } } },
+} satisfies Record<string, { label: string; where: Prisma.ReviewWhereInput }>;
+export type RatingFilter = keyof typeof RATING_FILTERS;
 
-export function isInboxFilter(value: string | undefined): value is InboxFilter {
-  return Boolean(value && value in FILTERS);
+export const SORTS = {
+  recenti: { label: "Più recenti", orderBy: [{ reviewedAt: "desc" }] },
+  "meno-recenti": { label: "Meno recenti", orderBy: [{ reviewedAt: "asc" }] },
+  valutazione: { label: "Valutazione più bassa", orderBy: [{ rating: "asc" }, { reviewedAt: "desc" }] },
+} satisfies Record<string, { label: string; orderBy: Prisma.ReviewOrderByWithRelationInput[] }>;
+export type SortKey = keyof typeof SORTS;
+
+export function pick<T extends object>(map: T, value: string | undefined, fallback: keyof T): keyof T {
+  return value && Object.prototype.hasOwnProperty.call(map, value) ? (value as keyof T) : fallback;
 }
 
-export async function listReviews(ctx: OrgContext, opts: { filter: InboxFilter; locationId?: string; take?: number }) {
+export type InboxQuery = { status: StatusFilter; rating?: RatingFilter; q?: string; sort: SortKey; locationId?: string | null };
+
+function baseWhere(ctx: OrgContext, locationId?: string | null): Prisma.ReviewWhereInput {
+  return { organizationId: ctx.organization.id, location: { archivedAt: null }, ...(locationId ? { locationId } : {}) };
+}
+
+export async function listReviews(ctx: OrgContext, query: InboxQuery, take = 200) {
+  const q = query.q?.trim().slice(0, 100);
   return db.review.findMany({
     where: {
-      organizationId: ctx.organization.id,
-      location: { archivedAt: null },
-      ...(opts.locationId ? { locationId: opts.locationId } : {}),
-      ...FILTERS[opts.filter],
+      ...baseWhere(ctx, query.locationId),
+      ...STATUS_FILTERS[query.status].where,
+      ...(query.rating ? RATING_FILTERS[query.rating].where : {}),
+      ...(q ? { OR: [{ comment: { contains: q, mode: "insensitive" } }, { authorName: { contains: q, mode: "insensitive" } }, { replyText: { contains: q, mode: "insensitive" } }] } : {}),
     },
-    orderBy: { reviewedAt: "desc" },
-    take: opts.take ?? 100,
+    orderBy: SORTS[query.sort].orderBy,
+    take,
     include: { location: { select: { name: true } } },
   });
+}
+
+/** Counts per status filter and per rating bucket, for the filter rail. */
+export async function inboxCounts(ctx: OrgContext, locationId?: string | null) {
+  const where = baseWhere(ctx, locationId);
+  const [byStatus, byRating] = await Promise.all([
+    db.review.groupBy({ by: ["status"], where, _count: { _all: true } }),
+    db.review.groupBy({ by: ["rating"], where, _count: { _all: true } }),
+  ]);
+  const s = (k: string) => byStatus.find((r) => r.status === k)?._count._all ?? 0;
+  const r = (test: (n: number) => boolean) => byRating.filter((x) => test(x.rating)).reduce((a, x) => a + x._count._all, 0);
+  return {
+    status: {
+      "da-gestire": s("NEW") + s("FAILED"),
+      bozze: s("DRAFT"),
+      "da-approvare": s("APPROVED"),
+      pubblicate: s("PUBLISHED"),
+      archiviate: s("IGNORED"),
+      tutte: byStatus.reduce((a, x) => a + x._count._all, 0),
+    } satisfies Record<StatusFilter, number>,
+    rating: { negative: r((n) => n <= 2), neutre: r((n) => n === 3), positive: r((n) => n >= 4) } satisfies Record<RatingFilter, number>,
+  };
 }
 
 export async function getReview(ctx: OrgContext, reviewId: string) {
@@ -51,8 +94,8 @@ export async function getReview(ctx: OrgContext, reviewId: string) {
   });
 }
 
-export async function reviewStats(ctx: OrgContext) {
-  const where = { organizationId: ctx.organization.id, location: { archivedAt: null } };
+export async function reviewStats(ctx: OrgContext, locationId?: string | null) {
+  const where = baseWhere(ctx, locationId);
   const since = new Date(Date.now() - 30 * 86_400_000);
   const [total, avg, pending, published, recent, byRating, aiDrafts] = await Promise.all([
     db.review.count({ where }),
@@ -61,7 +104,7 @@ export async function reviewStats(ctx: OrgContext) {
     db.review.count({ where: { ...where, status: "PUBLISHED" } }),
     db.review.count({ where: { ...where, reviewedAt: { gte: since } } }),
     db.review.groupBy({ by: ["rating"], where, _count: { _all: true } }),
-    db.replyDraft.count({ where: { organizationId: ctx.organization.id, createdAt: { gte: since } } }),
+    db.replyDraft.count({ where: { organizationId: ctx.organization.id, createdAt: { gte: since }, ...(locationId ? { review: { locationId } } : {}) } }),
   ]);
   const distribution = [5, 4, 3, 2, 1].map((stars) => ({ stars, count: byRating.find((r) => r.rating === stars)?._count._all ?? 0 }));
   return {
@@ -94,6 +137,8 @@ export async function generateDraft(ctx: OrgContext, reviewId: string, opts: { t
     category: CATEGORY_LABELS[review.location.category],
     businessContext: review.location.businessContext,
     signature: review.location.signature,
+    language: review.location.replyLanguage,
+    customInstructions: review.location.customInstructions,
     tone,
     length,
     review: { authorName: review.authorName, rating: review.rating, comment: review.comment },
@@ -131,6 +176,16 @@ export async function saveDraft(ctx: OrgContext, reviewId: string, text: string)
     where: { id: review.id },
     data: { replyText: text, ...(review.status === "PUBLISHED" ? {} : { status: "DRAFT" }) },
   });
+}
+
+/** A collaborator hands a finished draft to the owner/admins for publication. */
+export async function requestApproval(ctx: OrgContext, reviewId: string, text: string) {
+  const review = await db.review.findFirst({ where: { id: reviewId, organizationId: ctx.organization.id } });
+  if (!review) throw new UserError("Recensione non trovata.");
+  if (review.status === "PUBLISHED") throw new UserError("La risposta è già pubblicata.");
+  if (!text.trim()) throw new UserError("La risposta è vuota.");
+  await db.review.update({ where: { id: review.id }, data: { replyText: text.trim(), status: "APPROVED" } });
+  await audit({ organizationId: ctx.organization.id, actorUserId: ctx.user.id, action: "review.reply.approval_requested", targetType: "review", targetId: review.id });
 }
 
 export async function setStatus(ctx: OrgContext, reviewId: string, status: Extract<ReviewStatus, "IGNORED" | "NEW">) {
@@ -188,4 +243,33 @@ export async function publishReply(ctx: OrgContext, reviewId: string, text: stri
     metadata: { provider: connection.provider, flags: checkReply(clean), length: clean.length },
   });
   return { simulated: connection.provider === "MOCK" };
+}
+
+const WEEK = 7 * 86_400_000;
+
+function mondayOf(d: Date) {
+  const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = (x.getUTCDay() + 6) % 7;
+  return new Date(x.getTime() - day * 86_400_000);
+}
+
+/** Reviews received and replies published per week, oldest first. Real data only. */
+export async function weeklyActivity(ctx: OrgContext, locationId?: string | null, weeks = 12) {
+  const firstWeek = new Date(mondayOf(new Date()).getTime() - (weeks - 1) * WEEK);
+  const where = baseWhere(ctx, locationId);
+  const [received, replied] = await Promise.all([
+    db.review.findMany({ where: { ...where, reviewedAt: { gte: firstWeek } }, select: { reviewedAt: true } }),
+    db.review.findMany({ where: { ...where, replyPublishedAt: { gte: firstWeek } }, select: { replyPublishedAt: true } }),
+  ]);
+  const buckets = Array.from({ length: weeks }, (_, i) => ({ weekStart: new Date(firstWeek.getTime() + i * WEEK), received: 0, replied: 0 }));
+  const index = (d: Date) => Math.floor((mondayOf(d).getTime() - firstWeek.getTime()) / WEEK);
+  for (const r of received) {
+    const b = buckets[index(r.reviewedAt)];
+    if (b) b.received++;
+  }
+  for (const r of replied) {
+    const b = r.replyPublishedAt ? buckets[index(r.replyPublishedAt)] : undefined;
+    if (b) b.replied++;
+  }
+  return buckets;
 }

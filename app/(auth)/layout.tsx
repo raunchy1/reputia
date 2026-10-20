@@ -10,18 +10,17 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <p className="text-xs text-faint">© {new Date().getFullYear()} Reputia · Fatto in Italia</p>
       </div>
       <aside className="relative hidden overflow-hidden bg-ink lg:block" aria-hidden>
-        <div className="absolute inset-0 bg-[radial-gradient(60%_50%_at_70%_20%,rgb(90_72_208/0.45),transparent_70%)]" />
         <div className="relative flex h-full flex-col justify-center gap-5 px-14">
           <p className="display max-w-md text-[40px] leading-[1.08] text-white">Ogni recensione merita una risposta all&apos;altezza della tua attività.</p>
-          <div className="mt-6 max-w-md rotate-[-1.5deg] rounded-2xl bg-white/95 p-5 shadow-pop">
+          <div className="mt-6 max-w-md rounded-[10px] bg-white p-5">
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-ink">Francesca M.</span>
               <Stars rating={5} />
             </div>
             <p className="mt-2 text-sm leading-relaxed text-muted">Cena splendida, il risotto ai funghi era perfetto. Personale attento e simpatico.</p>
           </div>
-          <div className="ml-10 max-w-md rotate-[1deg] rounded-2xl border border-white/10 bg-white/10 p-5 backdrop-blur">
-            <span className="text-xs font-medium tracking-wide text-white/60 uppercase">Risposta proposta</span>
+          <div className="ml-10 max-w-md rounded-[10px] border border-white/10 bg-white/[0.06] p-5">
+            <span className="text-xs font-medium text-white/60">Bozza dell&apos;assistente · da approvare</span>
             <p className="mt-2 text-sm leading-relaxed text-white/90">Grazie Francesca! Il risotto è uno dei piatti a cui teniamo di più: siamo felici che l&apos;abbia apprezzato. A presto!</p>
           </div>
         </div>

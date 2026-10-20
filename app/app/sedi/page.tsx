@@ -1,7 +1,7 @@
 import { MapPin } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { PageHeader } from "@/components/app/page-header";
+import { PageBody, PageHeader } from "@/components/app/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Field, Input, Select } from "@/components/ui/field";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
@@ -23,20 +23,20 @@ export default async function LocationsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Sedi"
-        title="Le tue sedi"
+        title="Sedi"
         description={`Ogni sede ha la sua scheda Google, le sue recensioni e il suo tono di voce. Il piano costa ${formatEur(PLAN.monthlyPriceEur)} al mese per sede.`}
       />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <ul className="grid content-start gap-3">
+      <PageBody>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <ul className="panel grid content-start divide-y divide-line">
           {locations.map((l) => (
-            <li key={l.id} className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
-              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-paper-deep text-ink-soft">
-                <MapPin className="size-5" strokeWidth={1.7} aria-hidden />
+            <li key={l.id} className="flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center">
+              <span className="grid size-9 shrink-0 place-items-center rounded-md border border-line bg-canvas text-muted">
+                <MapPin className="size-4" strokeWidth={1.75} aria-hidden />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold">{l.name}</p>
-                <p className="text-sm text-muted">
+                <p className="text-[13px] font-semibold">{l.name}</p>
+                <p className="text-xs text-muted">
                   {CATEGORY_LABELS[l.category]}
                   {l.city && ` · ${l.city}`} · {l._count.reviews} recensioni
                   {l.lastSyncedAt && ` · sincronizzata ${relativeDate(l.lastSyncedAt)}`}
@@ -67,8 +67,8 @@ export default async function LocationsPage() {
           ))}
         </ul>
         {canEdit && (
-          <ActionForm action={createLocationAction} className="card grid content-start gap-4 p-6">
-            <h2 className="font-semibold">Aggiungi una sede</h2>
+          <ActionForm action={createLocationAction} className="panel grid content-start gap-4 p-5">
+            <h2 className="text-sm font-semibold">Aggiungi una sede</h2>
             <Field label="Nome" htmlFor="name">
               <Input id="name" name="name" required maxLength={120} placeholder="Es. Trattoria da Gino — Centro" />
             </Field>
@@ -92,6 +92,7 @@ export default async function LocationsPage() {
           </ActionForm>
         )}
       </div>
+      </PageBody>
     </>
   );
 }

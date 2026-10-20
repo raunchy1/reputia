@@ -223,6 +223,9 @@ model Location {
   replyLength        ReplyLength       @default(MEDIA)
   businessContext    String            @default("")
   signature          String            @default("")
+  /// BCP-47 language for replies; "auto" answers in the review's language.
+  replyLanguage      String            @default("it")
+  customInstructions String            @default("")
   lastSyncedAt       DateTime?
   archivedAt         DateTime?
   createdAt          DateTime          @default(now())

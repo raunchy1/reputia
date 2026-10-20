@@ -1,117 +1,110 @@
-import { Inbox } from "lucide-react";
+import { Inbox, SearchX } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Avatar } from "@/components/app/avatar";
-import { PageHeader } from "@/components/app/page-header";
-import { ReviewStatusBadge } from "@/components/app/review-status";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { InboxToolbar } from "@/components/reviews/inbox-toolbar";
+import { ReviewDetail } from "@/components/reviews/review-detail";
+import { ReviewFilters } from "@/components/reviews/review-filters";
+import { ReviewRow } from "@/components/reviews/review-row";
 import { SyncButton } from "@/components/reviews/sync-button";
-import { Stars } from "@/components/ui/stars";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/cn";
-import { relativeDate } from "@/lib/format";
-import { listLocations } from "@/lib/services/locations";
-import { isInboxFilter, listReviews, type InboxFilter } from "@/lib/services/reviews";
+import { db } from "@/lib/db";
+import { activeLocationId } from "@/lib/location-scope";
+import { hasRole } from "@/lib/roles";
+import { getReview, inboxCounts, listReviews, pick, RATING_FILTERS, SORTS, STATUS_FILTERS, type RatingFilter } from "@/lib/services/reviews";
 import { requireOrg } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Recensioni" };
 
-const TABS: Array<{ value: InboxFilter; label: string }> = [
-  { value: "da-gestire", label: "Da gestire" },
-  { value: "bozze", label: "Bozze" },
-  { value: "negative", label: "Negative" },
-  { value: "pubblicate", label: "Pubblicate" },
-  { value: "tutte", label: "Tutte" },
-];
+type Params = { stato?: string; stelle?: string; q?: string; ordine?: string; r?: string };
 
-export default async function ReviewsPage({ searchParams }: { searchParams: Promise<{ filtro?: string; sede?: string }> }) {
+export default async function ReviewsPage({ searchParams }: { searchParams: Promise<Params> }) {
   const ctx = await requireOrg();
   const params = await searchParams;
-  const filter: InboxFilter = isInboxFilter(params.filtro) ? params.filtro : "da-gestire";
-  const locations = await listLocations(ctx);
-  const locationId = locations.some((l) => l.id === params.sede) ? params.sede : undefined;
-  const reviews = await listReviews(ctx, { filter, locationId });
+  const locations = await db.location.findMany({ where: { organizationId: ctx.organization.id, archivedAt: null }, select: { id: true } });
+  const locationId = await activeLocationId(locations.map((l) => l.id));
 
-  const href = (next: { filtro?: string; sede?: string }) => {
-    const q = new URLSearchParams({ filtro: next.filtro ?? filter });
-    const sede = next.sede === undefined ? locationId : next.sede;
-    if (sede) q.set("sede", sede);
-    return `/app/recensioni?${q}`;
+  const status = pick(STATUS_FILTERS, params.stato, "da-gestire");
+  const rating = params.stelle ? (pick(RATING_FILTERS, params.stelle, "negative") as RatingFilter) : undefined;
+  const sort = pick(SORTS, params.ordine, "recenti");
+  const q = params.q?.slice(0, 100);
+
+  const [reviews, counts] = await Promise.all([listReviews(ctx, { status, rating, q, sort, locationId }), inboxCounts(ctx, locationId)]);
+  const selectedId = params.r ?? null;
+  const selected = selectedId ? await getReview(ctx, selectedId) : reviews[0] ? await getReview(ctx, reviews[0].id) : null;
+  if (selectedId && !selected) notFound();
+
+  const hrefFor = (patch: Record<string, string | null>) => {
+    const next = new URLSearchParams();
+    const merged: Record<string, string | undefined | null> = { stato: params.stato, stelle: params.stelle, q: params.q, ordine: params.ordine, r: params.r, ...patch };
+    for (const [k, v] of Object.entries(merged)) if (v) next.set(k, v);
+    const s = next.toString();
+    return s ? `/app/recensioni?${s}` : "/app/recensioni";
   };
+  const showLocation = locations.length > 1 && !locationId;
+  const detailOpenOnMobile = Boolean(selectedId);
 
   return (
-    <>
-      <PageHeader eyebrow="Recensioni" title="La tua casella" description="Le recensioni Google delle tue sedi, dalla più recente." actions={<SyncButton />} />
-
-      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <nav aria-label="Filtra recensioni" className="-mx-1 flex gap-1 overflow-x-auto px-1">
-          {TABS.map((t) => (
-            <Link
-              key={t.value}
-              href={href({ filtro: t.value })}
-              aria-current={filter === t.value ? "page" : undefined}
-              className={cn(
-                "shrink-0 rounded-full px-3.5 py-1.5 text-sm transition-colors",
-                filter === t.value ? "bg-ink text-white" : "text-muted hover:bg-paper-deep hover:text-ink",
-              )}
+    <div className="flex min-h-0 flex-1 flex-col lg:h-[calc(100dvh-18px)] lg:flex-row">
+      {/* Filters rail */}
+      <aside className={cn("shrink-0 border-line lg:w-56 lg:border-r", detailOpenOnMobile && "hidden lg:block")}>
+        <div className="flex h-12 items-center justify-between border-b border-line px-4">
+          <h1 className="text-[15px] font-semibold">Recensioni</h1>
+          <SyncButton compact />
+        </div>
+        <div className="hidden p-2 lg:block">
+          <ReviewFilters counts={counts} status={status} rating={rating} hrefFor={hrefFor} />
+        </div>
+        {/* Mobile: horizontal status chips */}
+        <nav aria-label="Filtri" className="flex gap-1 overflow-x-auto border-b border-line px-3 py-2 lg:hidden">
+          {(Object.keys(STATUS_FILTERS) as Array<keyof typeof STATUS_FILTERS>).map((k) => (
+            <a
+              key={k}
+              href={hrefFor({ stato: k === "da-gestire" ? null : k, r: null })}
+              aria-current={status === k ? "true" : undefined}
+              className={cn("shrink-0 rounded-md px-2.5 py-1 text-[13px]", status === k ? "bg-ink text-white" : "text-ink-2 hover:bg-subtle")}
             >
-              {t.label}
-            </Link>
+              {STATUS_FILTERS[k].label} <span className="tabular-nums opacity-70">{counts.status[k]}</span>
+            </a>
           ))}
         </nav>
-        {locations.length > 1 && (
-          <div className="flex flex-wrap gap-1 text-sm">
-            <Link href={href({ sede: "" })} className={cn("rounded-full px-3 py-1", !locationId ? "bg-surface shadow-card" : "text-muted")}>
-              Tutte le sedi
-            </Link>
-            {locations.map((l) => (
-              <Link key={l.id} href={href({ sede: l.id })} className={cn("rounded-full px-3 py-1", locationId === l.id ? "bg-surface shadow-card" : "text-muted")}>
-                {l.name}
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
+      </aside>
 
-      {reviews.length === 0 ? (
-        <div className="card grid place-items-center gap-3 px-6 py-20 text-center">
-          <Inbox className="size-10 text-line-strong" strokeWidth={1.5} aria-hidden />
-          <p className="font-medium">Nessuna recensione qui</p>
-          <p className="max-w-sm text-sm text-muted">
-            {filter === "da-gestire" ? "Hai risposto a tutto. Le nuove recensioni compariranno qui dopo la sincronizzazione." : "Prova a cambiare filtro."}
-          </p>
-        </div>
-      ) : (
-        <ul className="grid gap-3">
-          {reviews.map((r) => (
-            <li key={r.id}>
-              <Link
-                href={`/app/recensioni/${r.id}`}
-                className="card group flex gap-4 p-5 transition-[box-shadow,border-color] hover:border-line-strong hover:shadow-pop"
-              >
-                <Avatar name={r.authorName} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span className="font-medium">{r.authorName}</span>
-                    <Stars rating={r.rating} />
-                    <span className="text-xs text-faint">
-                      {relativeDate(r.reviewedAt)}
-                      {locations.length > 1 && ` · ${r.location.name}`}
-                    </span>
-                    <span className="ml-auto">
-                      <ReviewStatusBadge status={r.status} />
-                    </span>
-                  </div>
-                  <p className="mt-2 line-clamp-2 text-[15px] leading-relaxed text-ink-soft">
-                    {r.comment ?? <span className="text-muted italic">Solo valutazione, senza testo.</span>}
-                  </p>
-                  {r.replyText && r.status !== "NEW" && (
-                    <p className="mt-2 line-clamp-1 border-l-2 border-accent-line pl-3 text-sm text-muted">{r.replyText}</p>
-                  )}
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </>
+      {/* List */}
+      <section aria-label="Elenco recensioni" className={cn("flex min-h-0 flex-col border-line lg:w-[380px] lg:shrink-0 lg:border-r", detailOpenOnMobile && "hidden lg:flex")}>
+        <Suspense>
+          <InboxToolbar total={reviews.length} />
+        </Suspense>
+        {reviews.length === 0 ? (
+          q ? (
+            <EmptyState icon={SearchX} title="Nessun risultato">
+              Nessuna recensione contiene «{q}» con questi filtri.
+            </EmptyState>
+          ) : (
+            <EmptyState icon={Inbox} title={status === "da-gestire" ? "Sei in pari" : "Nessuna recensione"}>
+              {status === "da-gestire" ? "Non ci sono recensioni in attesa di risposta. Quelle nuove compariranno qui." : "Nessuna recensione corrisponde a questo filtro."}
+            </EmptyState>
+          )
+        ) : (
+          <ul className="min-h-0 flex-1 overflow-y-auto">
+            {reviews.map((r) => (
+              <ReviewRow key={r.id} review={r} href={hrefFor({ r: r.id })} selected={selected?.id === r.id} showLocation={showLocation} />
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* Detail */}
+      <section aria-label="Dettaglio recensione" className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto bg-canvas/40", !detailOpenOnMobile && "hidden lg:block")}>
+        {selected ? (
+          <ReviewDetail key={selected.id} review={selected} canPublish={hasRole(ctx.role, "admin")} backHref={hrefFor({ r: null })} />
+        ) : (
+          <EmptyState icon={Inbox} title="Seleziona una recensione" className="h-full">
+            Scegli una recensione dall&apos;elenco per leggerla e preparare la risposta.
+          </EmptyState>
+        )}
+      </section>
+    </div>
   );
 }

@@ -41,12 +41,12 @@ run("tenant isolation", async () => {
 
   it("owner sees their own review", async () => {
     expect(await reviews.getReview(a, reviewA)).not.toBeNull();
-    expect((await reviews.listReviews(a, { filter: "tutte" })).map((r) => r.id)).toContain(reviewA);
+    expect((await reviews.listReviews(a, { status: "tutte", sort: "recenti" })).map((r) => r.id)).toContain(reviewA);
   });
 
   it("another tenant cannot read it", async () => {
     expect(await reviews.getReview(b, reviewA)).toBeNull();
-    expect(await reviews.listReviews(b, { filter: "tutte" })).toHaveLength(0);
+    expect(await reviews.listReviews(b, { status: "tutte", sort: "recenti" })).toHaveLength(0);
     expect((await reviews.reviewStats(b)).total).toBe(0);
   });
 
