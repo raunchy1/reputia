@@ -10,4 +10,7 @@ export const LEGAL = {
 
 export const legalComplete = Boolean(LEGAL.company && LEGAL.vat && LEGAL.address && LEGAL.email);
 
+/** Parent company shown in the footer ("Un prodotto …"). */
+export const PRODUCT_OF = { name: process.env.PRODUCT_OF_NAME ?? "", url: process.env.PRODUCT_OF_URL ?? "" };
+
 export const DEMO_BOOKING_URL = process.env.DEMO_BOOKING_URL ?? "";

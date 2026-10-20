@@ -35,6 +35,8 @@ services:
       LEGAL_ADDRESS: ${LEGAL_ADDRESS:-}
       LEGAL_CONTACT_EMAIL: ${LEGAL_CONTACT_EMAIL:-}
       LEGAL_PEC: ${LEGAL_PEC:-}
+      PRODUCT_OF_NAME: ${PRODUCT_OF_NAME:-}
+      PRODUCT_OF_URL: ${PRODUCT_OF_URL:-}
     expose:
       - "3000"
     depends_on:
