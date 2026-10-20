@@ -24,7 +24,7 @@
 | Blocco | Cosa serve |
 |--------|------------|
 | Email transazionali | Provider SMTP (`SMTP_URL`) — senza, le registrazioni sono sospese |
-| Google | Approvazione API GBP + verifica dello scope `business.manage` |
+| Google | Richiesta di accesso API inviata il 20/10/2026 (caso **6-9644000042113**, progetto Cloud `reputia-512221` n. 937045868547, profilo WebSardegna). Attesa 7–10 giorni lavorativi. Poi: abilitare `mybusiness.googleapis.com` (v4), schermata di consenso OAuth e verifica dello scope `business.manage` |
 | Stripe | Sandbox, prezzo, webhook; registrazione IVA in Stripe Tax; **fatturazione elettronica SDI** |
 | Pagine legali | Dati societari (`LEGAL_*`) e revisione da parte di un professionista |
 | Sincronizzazione automatica | Oggi la sync è manuale (pulsante) o al collegamento. Serve un job pianificato |
