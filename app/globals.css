@@ -1,1 +1,89 @@
-:root{font-family:Inter,system-ui,sans-serif;color:#17253d;background:#f7f8fb}*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{cursor:pointer}a{color:inherit}.shell{display:flex;min-height:100vh}.sidebar{background:#111d34;color:white;width:245px;padding:28px 18px}.brand{font-size:27px;font-weight:800;letter-spacing:-1px}.brand span{color:#9b8bff}.nav{margin-top:38px;display:grid;gap:10px}.nav button{text-align:left;background:transparent;color:#cbd5e1;border:none;border-radius:10px;padding:14px}.nav button.active{background:#3d3a7f;color:white}.main{flex:1;min-width:0}.top{background:white;padding:20px 36px;border-bottom:1px solid #e6e9f0;color:#657187}.content{max-width:1180px;margin:auto;padding:35px}h1{font-size:34px;letter-spacing:-1px;margin:8px 0}p{color:#69758b;line-height:1.6}.eyebrow{font-size:11px;letter-spacing:2px;color:#7261ca;font-weight:800}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0}.metric,.panel,.review{background:white;border:1px solid #e9eaf1;border-radius:15px;padding:22px}.metric label{font-size:12px;color:#788498}.metric strong{display:block;font-size:32px;margin:10px 0}.grid{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}.review{margin:12px 0}.stars{color:#e9a93e}.button{border:0;border-radius:9px;padding:11px 17px;background:#6656d8;color:white;font-weight:700}.button.secondary{background:#eeeaff;color:#6150cc}.answer{background:#f4f1ff;border:1px solid #e4deff;border-radius:9px;padding:14px;margin-top:12px;white-space:pre-wrap}.pill{background:#f0edff;color:#6656d8;border-radius:20px;padding:6px 12px;font-size:12px}.input{border:1px solid #e4e8f0;border-radius:9px;padding:12px;width:100%;margin:7px 0 20px}.note{font-size:12px;color:#8691a2;margin-top:25px}@media(max-width:800px){.shell{display:block}.sidebar{width:100%;padding:18px}.nav{display:flex;margin-top:14px;overflow:auto}.nav button{white-space:nowrap}.content{padding:18px}.metrics{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  --color-paper: #f6f4ef;
+  --color-paper-deep: #efebe3;
+  --color-surface: #ffffff;
+  --color-ink: #121a2e;
+  --color-ink-soft: #2a3348;
+  --color-muted: #5d6579;
+  --color-faint: #8c92a3;
+  --color-line: #e6e1d7;
+  --color-line-strong: #d6cfc2;
+
+  --color-accent: #5a48d0;
+  --color-accent-hover: #4b3bb8;
+  --color-accent-soft: #efecfb;
+  --color-accent-line: #dcd6f6;
+
+  --color-star: #d4952a;
+  --color-positive: #1d7350;
+  --color-positive-soft: #e7f3ec;
+  --color-warning: #a8681b;
+  --color-warning-soft: #fbf1e1;
+  --color-danger: #b3372e;
+  --color-danger-soft: #fbeceb;
+
+  --radius-card: 18px;
+  --shadow-card: 0 1px 0 rgb(18 26 46 / 0.04), 0 8px 24px -12px rgb(18 26 46 / 0.12);
+  --shadow-pop: 0 2px 4px rgb(18 26 46 / 0.06), 0 24px 48px -16px rgb(18 26 46 / 0.22);
+
+  --animate-rise: rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection {
+    background: var(--color-accent-soft);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility display {
+  font-family: var(--font-display);
+  font-optical-sizing: auto;
+  letter-spacing: -0.025em;
+  font-weight: 450;
+}
+
+@utility card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+@utility eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
