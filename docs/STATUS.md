@@ -1,5 +1,10 @@
 # Stato del progetto — 20 ottobre 2026
 
+## Staging online
+- **https://reputia.websardegna.xyz** (Coolify, progetto «Reputia», app `npnzodpfmvevrt2gkyvh8ajn`, branch `dev`), certificato Let's Encrypt, DNS A su Spaceship → 13.140.190.190.
+- Variabili impostate: segreti generati, `APP_URL`, `LEGAL_COMPANY_NAME`/`PRODUCT_OF_*` = WebSardegna. Mancano SMTP (registrazioni sospese), AI, Google, Stripe.
+- Il deploy non parte da solo al push (repo pubblico senza webhook): ridistribuire da Coolify o via API.
+
 ## Funziona ed è verificato
 | Area | Verifica |
 |------|----------|
