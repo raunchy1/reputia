@@ -10,6 +10,7 @@ import { db } from "@/lib/db";
 import { UserError } from "@/lib/errors";
 import { BusinessCategory, ReplyLength, ReplyTone } from "@/lib/generated/prisma/enums";
 import { revokeToken } from "@/lib/google/oauth";
+import { syncQuantity } from "@/lib/billing/service";
 import { ensureMockConnection } from "@/lib/services/connections";
 import { archiveLocation, createLocation, linkLocation, updateLocation } from "@/lib/services/locations";
 import { syncLocation } from "@/lib/services/sync";
@@ -47,6 +48,7 @@ export async function createLocationAction(_: ActionState, form: FormData): Prom
       })
       .parse({ name: form.get("name"), category: form.get("category"), city: form.get("city") || undefined });
     await createLocation(ctx, data);
+    await syncQuantity(ctx.organization.id);
     revalidatePath("/app", "layout");
     return `Sede "${data.name}" aggiunta. Collegala a Google per importare le recensioni.`;
   });
@@ -56,6 +58,7 @@ export async function archiveLocationAction(_: ActionState, form: FormData): Pro
   return runAction(async () => {
     const ctx = await requireOrg("admin");
     await archiveLocation(ctx, id.parse(form.get("locationId")));
+    await syncQuantity(ctx.organization.id);
     revalidatePath("/app", "layout");
     return "Sede archiviata.";
   });

@@ -1,5 +1,6 @@
 import "server-only";
 import { UserError } from "@/lib/errors";
+import { assertCanWrite } from "@/lib/billing/entitlement";
 import { db } from "@/lib/db";
 import { markNeedsReconnect, providerFor } from "@/lib/services/connections";
 import { ProviderAuthError } from "@/lib/reviews/types";
@@ -17,6 +18,7 @@ export async function syncLocation(ctx: OrgContext, locationId: string): Promise
     include: { connection: true },
   });
   if (!location?.connection || !location.externalLocationId) throw new UserError("Questa sede non è collegata a Google.");
+  await assertCanWrite(ctx.organization.id);
   const provider = providerFor(location.connection, location.name);
   const source = location.connection.provider === "MOCK" ? "MOCK" : "GOOGLE";
 

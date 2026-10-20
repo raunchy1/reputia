@@ -47,7 +47,7 @@ export default function PricingPage() {
           proporzione.
         </p>
         <p>
-          <strong className="text-ink">Fatturazione.</strong> Pagamento con carta tramite Stripe. Ricevi ogni mese la fattura con IVA per la tua partita IVA.
+          <strong className="text-ink">Fatturazione.</strong> Pagamento sicuro tramite Stripe, con fattura per ogni rinnovo.
         </p>
       </div>
     </section>

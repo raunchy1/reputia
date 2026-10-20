@@ -2,15 +2,17 @@ import Link from "next/link";
 import { AppNav } from "@/components/app/nav";
 import { SignOutButton } from "@/components/app/sign-out-button";
 import { Logo } from "@/components/ui/logo";
+import { getEntitlement } from "@/lib/billing/entitlement";
 import { db } from "@/lib/db";
 import { ROLE_LABELS, isRole } from "@/lib/roles";
 import { requireOrg } from "@/lib/session";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireOrg();
-  const [pending, mock] = await Promise.all([
+  const [pending, mock, entitlement] = await Promise.all([
     db.review.count({ where: { organizationId: ctx.organization.id, status: { in: ["NEW", "FAILED"] }, location: { archivedAt: null } } }),
     db.googleConnection.count({ where: { organizationId: ctx.organization.id, provider: "MOCK", status: "ACTIVE", locations: { some: {} } } }),
+    getEntitlement(ctx.organization.id),
   ]);
 
   return (
@@ -38,6 +40,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
       <div className="min-w-0">
+        {(entitlement.state === "expired" || entitlement.state === "past_due" || (entitlement.state === "trial" && entitlement.daysLeft <= 3)) && (
+          <div className="border-b border-danger/15 bg-danger-soft px-5 py-2.5 text-center text-[13px] text-danger">
+            {entitlement.state === "expired"
+              ? "Il periodo di prova è terminato: puoi consultare le recensioni ma non rispondere."
+              : entitlement.state === "past_due"
+                ? "Il pagamento dell'abbonamento non è andato a buon fine."
+                : `La prova gratuita termina tra ${entitlement.daysLeft} ${entitlement.daysLeft === 1 ? "giorno" : "giorni"}.`}{" "}
+            <Link href="/app/abbonamento" className="font-medium underline underline-offset-2">
+              Vai all&apos;abbonamento
+            </Link>
+          </div>
+        )}
         {mock > 0 && (
           <div className="border-b border-warning/20 bg-warning-soft px-5 py-2.5 text-center text-[13px] text-warning">
             <strong className="font-semibold">Modalità simulazione:</strong> stai usando recensioni di esempio. Le risposte non vengono pubblicate su Google.{" "}

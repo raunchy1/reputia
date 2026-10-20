@@ -3,6 +3,7 @@ import { UserError } from "@/lib/errors";
 import { generateReply } from "@/lib/ai/generate";
 import { checkReply, replyTooLong } from "@/lib/ai/safety";
 import { audit } from "@/lib/audit";
+import { assertCanWrite } from "@/lib/billing/entitlement";
 import { db } from "@/lib/db";
 import type { Prisma, ReplyLength, ReplyTone, ReviewStatus } from "@/lib/generated/prisma/client";
 import { rateLimit, RateLimitError } from "@/lib/rate-limit";
@@ -81,6 +82,7 @@ export async function generateDraft(ctx: OrgContext, reviewId: string, opts: { t
     include: { location: true },
   });
   if (!review) throw new UserError("Recensione non trovata.");
+  await assertCanWrite(ctx.organization.id);
 
   const limit = await rateLimit(`ai:${ctx.organization.id}`, 60, 3600);
   if (!limit.ok) throw new RateLimitError();
@@ -156,6 +158,7 @@ export async function publishReply(ctx: OrgContext, reviewId: string, text: stri
   if (!review) throw new UserError("Recensione non trovata.");
   const connection = review.location.connection;
   if (!connection || !review.location.externalLocationId) throw new UserError("La sede non è collegata a Google.");
+  await assertCanWrite(ctx.organization.id);
 
   const limit = await rateLimit(`publish:${ctx.organization.id}`, 30, 3600);
   if (!limit.ok) throw new RateLimitError();
