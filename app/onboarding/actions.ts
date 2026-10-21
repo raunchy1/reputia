@@ -71,6 +71,6 @@ export async function saveTone(_: ActionState, form: FormData): Promise<ActionSt
     const locations = await db.location.findMany({ where: { organizationId: ctx.organization.id, archivedAt: null }, select: { id: true } });
     for (const l of locations) await updateLocation(ctx, l.id, data);
   });
-  if (result?.ok) redirect("/app?benvenuto=1");
+  if (result?.ok) redirect("/onboarding/prima-risposta");
   return result;
 }

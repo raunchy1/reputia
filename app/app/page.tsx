@@ -1,162 +1,167 @@
-import { ArrowRight, MessageSquareText } from "lucide-react";
+import { ArrowRight, Inbox, Link2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Avatar } from "@/components/app/avatar";
-import { PageHeader } from "@/components/app/page-header";
+import { ActivityChart } from "@/components/app/activity-chart";
+import { PageBody, PageHeader } from "@/components/app/page-header";
+import { ReviewStatusBadge } from "@/components/app/review-status";
+import { RatingMark } from "@/components/reviews/rating-mark";
 import { ButtonLink } from "@/components/ui/button";
-import { Notice } from "@/components/ui/notice";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Stars } from "@/components/ui/stars";
+import { db } from "@/lib/db";
 import { greeting, rating, relativeDate } from "@/lib/format";
-import { listReviews, reviewStats } from "@/lib/services/reviews";
-import { listLocations } from "@/lib/services/locations";
+import { activeLocationId } from "@/lib/location-scope";
+import { inboxCounts, listReviews, reviewStats, weeklyActivity } from "@/lib/services/reviews";
 import { requireOrg } from "@/lib/session";
 
 export const metadata: Metadata = { title: "Panoramica" };
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ benvenuto?: string }> }) {
   const ctx = await requireOrg();
-  const [stats, todo, locations, { benvenuto }] = await Promise.all([
-    reviewStats(ctx),
-    listReviews(ctx, { filter: "da-gestire", take: 4 }),
-    listLocations(ctx),
+  const locations = await db.location.findMany({
+    where: { organizationId: ctx.organization.id, archivedAt: null },
+    select: { id: true, name: true, connectionId: true, lastSyncedAt: true, connection: { select: { provider: true } } },
+  });
+  const locationId = await activeLocationId(locations.map((l) => l.id));
+  const scope = locationId ? locations.filter((l) => l.id === locationId) : locations;
+  const [stats, counts, recent, weeks, { benvenuto }] = await Promise.all([
+    reviewStats(ctx, locationId),
+    inboxCounts(ctx, locationId),
+    listReviews(ctx, { status: "tutte", sort: "recenti", locationId }, 6),
+    weeklyActivity(ctx, locationId),
     searchParams,
   ]);
-  const unlinked = locations.filter((l) => !l.connection).length;
-  const maxCount = Math.max(1, ...stats.distribution.map((d) => d.count));
+  const unlinked = scope.filter((l) => !l.connectionId);
+  const negativePending = await db.review.count({
+    where: { organizationId: ctx.organization.id, location: { archivedAt: null }, ...(locationId ? { locationId } : {}), status: { in: ["NEW", "FAILED"] }, rating: { lte: 2 } },
+  });
+  const lastSync = scope.map((l) => l.lastSyncedAt).filter(Boolean).sort((a, b) => b!.getTime() - a!.getTime())[0];
+  const simulated = scope.some((l) => l.connection?.provider === "MOCK");
+  const toHandle = counts.status["da-gestire"];
 
   return (
     <>
       <PageHeader
-        eyebrow={ctx.organization.name}
-        title={`${greeting()}, ${ctx.user.name.split(" ")[0]}`}
-        description={
-          stats.pending > 0 ? (
-            <>
-              Hai <strong className="font-semibold text-ink">{stats.pending}</strong> {stats.pending === 1 ? "recensione" : "recensioni"} in attesa di risposta.
-            </>
-          ) : (
-            "Sei in pari con tutte le recensioni. Ottimo lavoro."
-          )
-        }
+        title="Panoramica"
+        description={`${greeting()}, ${ctx.user.name.split(" ")[0]} · ${locationId ? scope[0]?.name : locations.length > 1 ? "Tutte le sedi" : (locations[0]?.name ?? ctx.organization.name)}`}
         actions={
-          stats.pending > 0 ? (
-            <ButtonLink href="/app/recensioni" size="lg">
-              Rispondi ora <ArrowRight className="size-4" aria-hidden />
-            </ButtonLink>
-          ) : undefined
+          <ButtonLink href="/app/recensioni" variant="secondary">
+            <Inbox aria-hidden /> Apri la casella
+          </ButtonLink>
         }
       />
-
-      {benvenuto && (
-        <Notice tone="positive" className="mb-8">
-          Tutto pronto! Apri una recensione e premi &laquo;Genera risposta&raquo;: l&apos;assistente scriverà una bozza che potrai modificare e approvare.
-        </Notice>
-      )}
-      {unlinked > 0 && (
-        <Notice tone="warning" className="mb-8">
-          {unlinked === 1 ? "Una sede non è collegata" : `${unlinked} sedi non sono collegate`} a Google.{" "}
-          <Link href="/app/google" className="font-medium underline underline-offset-2">
-            Collega ora
-          </Link>
-        </Notice>
-      )}
-
-      <section aria-label="Indicatori" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Metric label="Valutazione media" value={stats.total ? rating(stats.average) : "—"} suffix={stats.total ? "/ 5" : undefined}>
-          {stats.total > 0 && <Stars rating={Math.round(stats.average)} className="mt-2" />}
-        </Metric>
-        <Metric label="Recensioni totali" value={String(stats.total)} note={`${stats.recent} negli ultimi 30 giorni`} />
-        <Metric label="Da gestire" value={String(stats.pending)} note={stats.pending ? "In attesa di risposta" : "Nessuna in attesa"} highlight={stats.pending > 0} />
-        <Metric label="Tasso di risposta" value={`${stats.responseRate}%`} note={`${stats.published} risposte pubblicate`} />
-      </section>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
-        <section className="card p-6" aria-labelledby="todo-title">
-          <div className="flex items-center justify-between">
-            <h2 id="todo-title" className="font-semibold">
-              Da rispondere
-            </h2>
-            <Link href="/app/recensioni" className="text-sm text-muted hover:text-ink">
-              Vedi tutte →
-            </Link>
-          </div>
-          {todo.length === 0 ? (
-            <div className="grid place-items-center gap-2 py-12 text-center">
-              <MessageSquareText className="size-8 text-line-strong" aria-hidden />
-              <p className="text-sm text-muted">Nessuna recensione in attesa.</p>
-            </div>
-          ) : (
-            <ul className="mt-4 divide-y divide-line">
-              {todo.map((r) => (
-                <li key={r.id}>
-                  <Link href={`/app/recensioni/${r.id}`} className="group -mx-3 flex gap-3 rounded-xl px-3 py-4 transition-colors hover:bg-paper">
-                    <Avatar name={r.authorName} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="truncate text-sm font-medium">{r.authorName}</span>
-                        <span className="shrink-0 text-xs text-faint">{relativeDate(r.reviewedAt)}</span>
-                      </div>
-                      <Stars rating={r.rating} className="mt-1" />
-                      <p className="mt-1.5 line-clamp-2 text-sm text-muted">{r.comment ?? "Solo valutazione, senza testo."}</p>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="card p-6" aria-labelledby="dist-title">
-          <h2 id="dist-title" className="font-semibold">
-            Distribuzione delle valutazioni
-          </h2>
-          <ul className="mt-5 grid gap-3">
-            {stats.distribution.map((d) => (
-              <li key={d.stars} className="grid grid-cols-[2.5rem_minmax(0,1fr)_2rem] items-center gap-3 text-sm">
-                <span className="text-muted tabular-nums">{d.stars} ★</span>
-                <span className="h-2 overflow-hidden rounded-full bg-paper-deep">
-                  <span
-                    className={d.stars >= 4 ? "block h-full rounded-full bg-ink" : d.stars === 3 ? "block h-full rounded-full bg-star" : "block h-full rounded-full bg-danger/70"}
-                    style={{ width: `${(d.count / maxCount) * 100}%` }}
-                  />
-                </span>
-                <span className="text-right text-muted tabular-nums">{d.count}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-6 border-t border-line pt-4 text-[13px] text-muted">
-            {stats.aiDrafts} bozze generate dall&apos;assistente negli ultimi 30 giorni.
+      <PageBody>
+        {benvenuto && (
+          <p className="mb-6 rounded-[var(--radius-panel)] border border-positive/20 bg-positive-soft px-4 py-3 text-[13px] text-positive" role="status">
+            Configurazione completata. Le tue recensioni sono nella casella: apri la prima e premi «Genera risposta».
           </p>
-        </section>
-      </div>
+        )}
+
+        {/* Next action */}
+        {unlinked.length > 0 ? (
+          <NextAction icon={Link2} title={`${unlinked.length === 1 ? "Una sede non è collegata" : `${unlinked.length} sedi non sono collegate`} a Google`} body="Collegala per importare le recensioni e rispondere da Reputia." href="/app/google" cta="Collega" />
+        ) : toHandle > 0 ? (
+          <NextAction
+            icon={Inbox}
+            title={`${toHandle} ${toHandle === 1 ? "recensione da gestire" : "recensioni da gestire"}`}
+            body={negativePending > 0 ? `${negativePending} ${negativePending === 1 ? "è negativa" : "sono negative"}: conviene rispondere per prime.` : "L'assistente può preparare le bozze in pochi secondi."}
+            href={negativePending > 0 ? "/app/recensioni?stelle=negative" : "/app/recensioni"}
+            cta="Rispondi"
+            emphasis
+          />
+        ) : (
+          <NextAction icon={Inbox} title="Sei in pari con le recensioni" body="Ti avviseremo qui quando ne arriveranno di nuove." href="/app/recensioni?stato=tutte" cta="Vedi tutte" />
+        )}
+
+        {/* Metric strip */}
+        <dl className="mt-6 grid grid-cols-2 overflow-hidden rounded-[var(--radius-panel)] border border-line lg:grid-cols-4">
+          <Metric label="Valutazione media" value={stats.total ? rating(stats.average) : "—"} unit={stats.total ? "su 5" : undefined}>
+            {stats.total > 0 && <Stars rating={Math.round(stats.average)} />}
+          </Metric>
+          <Metric label="Recensioni" value={String(stats.total)} note={`${stats.recent} negli ultimi 30 giorni`} />
+          <Metric label="Da gestire" value={String(toHandle)} note={counts.status["da-approvare"] ? `${counts.status["da-approvare"]} in attesa di approvazione` : "In attesa di risposta"} />
+          <Metric label="Tasso di risposta" value={`${stats.responseRate}%`} note={stats.published === 1 ? "1 risposta pubblicata" : `${stats.published} risposte pubblicate`} />
+        </dl>
+
+        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+          <section className="panel p-5" aria-labelledby="activity-title">
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 id="activity-title" className="text-[14px] font-semibold">
+                Attività delle ultime 12 settimane
+              </h2>
+              <p className="font-mono text-[11px] text-faint">
+                {simulated ? "Dati della simulazione" : "Dati da Google"}
+                {lastSync && ` · aggiornato ${relativeDate(lastSync)}`}
+              </p>
+            </div>
+            <ActivityChart data={weeks.map((w) => ({ ...w, weekStart: w.weekStart.toISOString() }))} />
+          </section>
+
+          <section className="panel flex flex-col" aria-labelledby="recent-title">
+            <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+              <h2 id="recent-title" className="text-sm font-semibold">
+                Ultime recensioni
+              </h2>
+              <Link href="/app/recensioni?stato=tutte" className="text-xs font-medium text-muted hover:text-ink">
+                Vedi tutte
+              </Link>
+            </div>
+            {recent.length === 0 ? (
+              <EmptyState icon={Inbox} title="Ancora nessuna recensione">
+                Collega Google o usa la simulazione per importarle.
+              </EmptyState>
+            ) : (
+              <ul className="divide-y divide-line">
+                {recent.map((r) => (
+                  <li key={r.id}>
+                    <Link href={`/app/recensioni?stato=tutte&r=${r.id}`} className="flex items-start gap-3 px-5 py-3 transition-colors hover:bg-subtle/70">
+                      <ReviewStatusBadge status={r.status} iconOnly className="mt-[3px]" />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline gap-2">
+                          <span className="truncate text-[13px] font-medium">{r.authorName}</span>
+                          <RatingMark rating={r.rating} />
+                          <span className="ml-auto shrink-0 font-mono text-[11px] text-faint">{relativeDate(r.reviewedAt)}</span>
+                        </div>
+                        <p className="mt-0.5 line-clamp-1 text-[13px] text-muted">{r.comment ?? "Solo valutazione"}</p>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      </PageBody>
     </>
   );
 }
 
-function Metric({
-  label,
-  value,
-  suffix,
-  note,
-  highlight,
-  children,
-}: {
-  label: string;
-  value: string;
-  suffix?: string;
-  note?: string;
-  highlight?: boolean;
-  children?: React.ReactNode;
-}) {
+/** The one thing to do now. The gold dot means "this needs your word". */
+function NextAction({ title, body, href, cta, emphasis }: { icon?: unknown; title: string; body: string; href: string; cta: string; emphasis?: boolean }) {
   return (
-    <div className={highlight ? "card border-accent-line bg-accent-soft/50 p-5" : "card p-5"}>
-      <p className="text-[13px] text-muted">{label}</p>
-      <p className="mt-2 flex items-baseline gap-1.5">
-        <span className="display text-[34px] leading-none tabular-nums">{value}</span>
-        {suffix && <span className="text-sm text-faint">{suffix}</span>}
-      </p>
-      {children}
-      {note && <p className="mt-2 text-xs text-muted">{note}</p>}
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[var(--radius-panel)] border border-line bg-surface px-5 py-4 shadow-card">
+      <span className={emphasis ? "size-2.5 shrink-0 rounded-full bg-gold ring-4 ring-gold-soft" : "size-2.5 shrink-0 rounded-full bg-line-strong"} aria-hidden />
+      <div className="min-w-0 flex-1">
+        <p className="text-[15px] font-semibold tracking-[-0.01em]">{title}</p>
+        <p className="text-[13px] text-muted">{body}</p>
+      </div>
+      <ButtonLink href={href} variant={emphasis ? "primary" : "secondary"}>
+        {cta} <ArrowRight aria-hidden />
+      </ButtonLink>
+    </div>
+  );
+}
+
+function Metric({ label, value, unit, note, children }: { label: string; value: string; unit?: string; note?: string; children?: React.ReactNode }) {
+  return (
+    <div className="border-line px-5 py-4 [&:not(:last-child)]:border-r max-lg:[&:nth-child(2)]:border-r-0 max-lg:[&:nth-child(-n+2)]:border-b">
+      <dt className="font-mono text-[11px] text-muted">{label}</dt>
+      <dd className="mt-1.5 flex items-baseline gap-1.5">
+        <span className="text-[30px] leading-none font-semibold tracking-[-0.04em]">{value}</span>
+        {unit && <span className="text-xs text-faint">{unit}</span>}
+      </dd>
+      {children && <dd className="mt-1.5">{children}</dd>}
+      {note && <dd className="mt-1.5 text-xs text-muted">{note}</dd>}
     </div>
   );
 }

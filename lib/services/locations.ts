@@ -27,7 +27,7 @@ export async function createLocation(ctx: OrgContext, data: { name: string; cate
 export async function updateLocation(
   ctx: OrgContext,
   id: string,
-  data: Partial<{ name: string; category: BusinessCategory; city: string; tone: ReplyTone; replyLength: ReplyLength; businessContext: string; signature: string }>,
+  data: Partial<{ name: string; category: BusinessCategory; city: string; tone: ReplyTone; replyLength: ReplyLength; businessContext: string; signature: string; replyLanguage: string; customInstructions: string }>,
 ) {
   const res = await db.location.updateMany({ where: { id, organizationId: ctx.organization.id, archivedAt: null }, data });
   if (res.count === 0) throw new UserError("Sede non trovata.");

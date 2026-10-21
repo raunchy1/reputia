@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/app/page-header";
+import { PageBody, PageHeader } from "@/components/app/page-header";
 import { Badge } from "@/components/ui/badge";
 import { ActionForm, SubmitButton } from "@/components/ui/form";
 import { Notice } from "@/components/ui/notice";
@@ -24,7 +24,9 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
 
   return (
     <>
-      <PageHeader eyebrow="Abbonamento" title="Piano e fatturazione" />
+      <PageHeader title="Abbonamento" description="Piano, pagamenti e fatture." />
+      <PageBody>
+      <div className="max-w-4xl">
       {esito === "ok" && (
         <Notice tone="positive" className="mb-6">
           Grazie! Il pagamento è stato registrato. L&apos;attivazione può richiedere qualche secondo: se lo stato non è aggiornato, ricarica la pagina.
@@ -45,13 +47,13 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
       )}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-        <section className="card p-6 sm:p-8" aria-labelledby="plan-title">
+        <section className="panel p-5 sm:p-6" aria-labelledby="plan-title">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 id="plan-title" className="text-sm text-muted">
                 Il tuo piano
               </h2>
-              <p className="display mt-1 text-3xl">Reputia {PLAN.name}</p>
+              <p className="mt-1 text-2xl font-semibold tracking-[-0.01em]">Reputia {PLAN.name}</p>
             </div>
             <Badge tone={entitlement.state === "active" ? "positive" : entitlement.state === "trial" ? "accent" : "danger"}>
               {entitlement.state === "active"
@@ -101,7 +103,7 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
               </ActionForm>
             ) : (
               <ActionForm action={checkoutAction} className="grid justify-items-start gap-3">
-                <SubmitButton size="lg" pendingLabel="Apertura del pagamento…">
+                <SubmitButton pendingLabel="Apertura del pagamento…">
                   Attiva l&apos;abbonamento
                 </SubmitButton>
                 <p className="text-xs text-muted">
@@ -111,8 +113,8 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
             )}
           </div>
         </section>
-        <aside className="card p-6 sm:p-8">
-          <h2 className="font-semibold">Cosa è incluso</h2>
+        <aside className="panel p-5 sm:p-6">
+          <h2 className="text-sm font-semibold">Cosa è incluso</h2>
           <ul className="mt-4 grid gap-3 text-sm">
             {["Recensioni e sedi collegate a Google", "Bozze AI con il tuo tono di voce", "Pubblicazione con approvazione", "Team con ruoli", "Assistenza in italiano"].map((i) => (
               <li key={i} className="flex gap-2.5">
@@ -122,6 +124,8 @@ export default async function BillingPage({ searchParams }: { searchParams: Prom
           </ul>
         </aside>
       </div>
+      </div>
+      </PageBody>
     </>
   );
 }

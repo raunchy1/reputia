@@ -34,11 +34,31 @@ export function sentimentFor(rating: number): Sentiment {
   return "negativa";
 }
 
+export const LANGUAGE_LABELS: Record<string, string> = {
+  it: "Italiano",
+  auto: "Lingua della recensione",
+  en: "Inglese",
+  de: "Tedesco",
+  fr: "Francese",
+  es: "Spagnolo",
+};
+
+const LANGUAGE_GUIDE: Record<string, string> = {
+  it: "Scrivi sempre in italiano corretto e naturale",
+  auto: "Rispondi nella stessa lingua in cui è scritta la recensione (in italiano se la recensione non ha testo)",
+  en: "Scrivi sempre in inglese corretto e naturale",
+  de: "Scrivi sempre in tedesco corretto e naturale",
+  fr: "Scrivi sempre in francese corretto e naturale",
+  es: "Scrivi sempre in spagnolo corretto e naturale",
+};
+
 export type PromptInput = {
   businessName: string;
   category: string;
   businessContext: string;
   signature: string;
+  language?: string;
+  customInstructions?: string;
   tone: ReplyTone;
   length: ReplyLength;
   review: { authorName: string; rating: number; comment: string | null };
@@ -57,10 +77,13 @@ const SENTIMENT_GUIDE: Record<Sentiment, string> = {
 export function buildSystemPrompt(input: Omit<PromptInput, "review">): string {
   return [
     `Scrivi risposte pubbliche alle recensioni Google per conto di "${input.businessName}" (${input.category}).`,
-    "Scrivi sempre in italiano corretto e naturale, come lo scriverebbe il titolare. Niente emoji, niente hashtag, niente virgolette attorno al testo.",
+    `${LANGUAGE_GUIDE[input.language ?? "it"] ?? LANGUAGE_GUIDE.it}, come lo scriverebbe il titolare. Niente emoji, niente hashtag, niente virgolette attorno al testo.`,
     `Tono: ${TONE_GUIDE[input.tone]}.`,
     `Lunghezza: ${LENGTH_GUIDE[input.length]}.`,
     "",
+    ...(input.customInstructions?.trim()
+      ? [`Preferenze di stile del titolare (seguile, ma le regole qui sotto hanno sempre la precedenza):\n${input.customInstructions.trim()}`, ""]
+      : []),
     "Regole che non puoi mai violare:",
     "- Non promettere sconti, omaggi, rimborsi, risarcimenti, buoni o compensi di alcun tipo.",
     "- Non inventare fatti, nomi di dipendenti, orari, prezzi, politiche o iniziative dell'attività che non trovi nel contesto qui sotto.",

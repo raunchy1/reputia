@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 type Tone = "info" | "positive" | "warning" | "danger";
 
 const tones: Record<Tone, string> = {
-  info: "border-accent-line bg-accent-soft/60 text-ink-soft",
+  info: "border-line bg-subtle text-ink-2",
   positive: "border-positive/20 bg-positive-soft text-positive",
   warning: "border-warning/25 bg-warning-soft text-warning",
   danger: "border-danger/20 bg-danger-soft text-danger",
@@ -12,7 +12,7 @@ const tones: Record<Tone, string> = {
 
 export function Notice({ tone = "info", children, className }: { tone?: Tone; children: ReactNode; className?: string }) {
   return (
-    <div role={tone === "danger" ? "alert" : "status"} className={cn("rounded-xl border px-4 py-3 text-sm leading-relaxed", tones[tone], className)}>
+    <div role={tone === "danger" ? "alert" : "status"} className={cn("rounded-[var(--radius-panel)] border px-3.5 py-2.5 text-[13px] leading-relaxed", tones[tone], className)}>
       {children}
     </div>
   );

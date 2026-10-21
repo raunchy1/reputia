@@ -1,40 +1,85 @@
 @import "tailwindcss";
 
+/* Tokens documented in docs/design/DESIGN_SYSTEM.md. Components use semantic names only. */
 @theme {
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-sans: var(--font-host), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-host), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
 
-  --color-paper: #f6f4ef;
-  --color-paper-deep: #efebe3;
+  /* Neutrals: warm paper greys, ink near-black. */
+  --color-canvas: #f7f7f5;
   --color-surface: #ffffff;
-  --color-ink: #121a2e;
-  --color-ink-soft: #2a3348;
-  --color-muted: #5d6579;
-  --color-faint: #8c92a3;
-  --color-line: #e6e1d7;
-  --color-line-strong: #d6cfc2;
+  --color-subtle: #f2f2ef;
+  --color-ink: #0e1116;
+  --color-ink-2: #2b3038;
+  --color-muted: #555b66;
+  --color-faint: #646c7a;
+  --color-line: #eaeae6;
+  --color-line-strong: #dcdcd7;
 
-  --color-accent: #5a48d0;
-  --color-accent-hover: #4b3bb8;
-  --color-accent-soft: #efecfb;
-  --color-accent-line: #dcd6f6;
+  /* Interaction is monochrome (ink). */
+  --color-accent: #0e1116;
+  --color-accent-hover: #2b3038;
+  --color-accent-soft: #efefec;
+  --color-accent-line: #e2e2dd;
 
-  --color-star: #d4952a;
-  --color-positive: #1d7350;
-  --color-positive-soft: #e7f3ec;
-  --color-warning: #a8681b;
-  --color-warning-soft: #fbf1e1;
-  --color-danger: #b3372e;
-  --color-danger-soft: #fbeceb;
+  /* "Il punto": the brand gold. Only for the dot motif, AI provenance and highlights. */
+  --color-gold: #d4961f;
+  --color-gold-bright: #e8b04a;
+  --color-gold-soft: #fbf3e3;
+  --color-gold-ink: #845400;
 
-  --radius-card: 18px;
-  --shadow-card: 0 1px 0 rgb(18 26 46 / 0.04), 0 8px 24px -12px rgb(18 26 46 / 0.12);
-  --shadow-pop: 0 2px 4px rgb(18 26 46 / 0.06), 0 24px 48px -16px rgb(18 26 46 / 0.22);
+  /* Chart series (validated with the dataviz checker). */
+  --color-chart-received: #1f8fa8;
+  --color-chart-replied: #d4961f;
 
-  --animate-rise: rise 420ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --color-star: #d4961f;
+  --color-positive: #15784b;
+  --color-positive-soft: #e8f4ed;
+  --color-warning: #9a4a12;
+  --color-warning-soft: #fbefe6;
+  --color-danger: #c0341d;
+  --color-danger-soft: #fcece9;
+
+  /* Marketing night surfaces. */
+  --color-night: #0b0d10;
+  --color-night-2: #12151a;
+  --color-night-line: #22262d;
+
+  /* Legacy aliases. */
+  --color-paper: var(--color-canvas);
+  --color-paper-deep: var(--color-subtle);
+  --color-ink-soft: var(--color-ink-2);
+
+  --radius-control: 6px;
+  --radius-panel: 10px;
+  --radius-card: 16px;
+
+  --shadow-card: 0 1px 2px rgb(27 36 48 / 0.04);
+  --shadow-pop: 0 1px 2px rgb(27 36 48 / 0.06), 0 12px 32px -8px rgb(27 36 48 / 0.18);
+
+  --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --animate-rise: rise 200ms var(--ease-out-soft) both;
+  --animate-fade: fade 200ms var(--ease-out-soft) both;
+  --animate-pop: pop 160ms var(--ease-out-soft) both;
+  --animate-shimmer: shimmer 1.4s linear infinite;
+
   @keyframes rise {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: translateY(-2px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
   }
 }
 
@@ -44,35 +89,46 @@
     text-rendering: optimizeLegibility;
   }
   body {
-    background: var(--color-paper);
+    background: var(--color-canvas);
     color: var(--color-ink);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01", "cv11";
+    font-size: 14px;
+    line-height: 1.55;
+    letter-spacing: -0.006em;
+    font-variant-numeric: tabular-nums;
   }
   ::selection {
-    background: var(--color-accent-soft);
-    color: var(--color-ink);
+    background: var(--color-gold-soft);
   }
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-ink);
     outline-offset: 2px;
-    border-radius: 6px;
+    border-radius: 4px;
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
   }
 }
 
+/* Display: the same grotesk, tight and heavy, like the wordmark. */
 @utility display {
   font-family: var(--font-display);
-  font-optical-sizing: auto;
-  letter-spacing: -0.025em;
-  font-weight: 450;
+  letter-spacing: -0.045em;
+  font-weight: 600;
+  line-height: 0.98;
 }
 
+@utility panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-panel);
+}
+
+/* Kept for marketing and auth screens. */
 @utility card {
   background: var(--color-surface);
   border: 1px solid var(--color-line);
@@ -81,9 +137,26 @@
 }
 
 @utility eyebrow {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-muted);
+}
+
+/* The brand dot, usable inline: <span class="punto" /> */
+@utility punto {
+  display: inline-block;
+  width: 0.36em;
+  height: 0.36em;
+  border-radius: 9999px;
+  background: var(--color-gold);
+}
+
+@utility skeleton {
+  background: linear-gradient(90deg, var(--color-subtle) 0%, #ebebe6 50%, var(--color-subtle) 100%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+  border-radius: 4px;
 }

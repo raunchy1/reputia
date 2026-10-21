@@ -1,30 +1,25 @@
 import { Logo } from "@/components/ui/logo";
-import { Stars } from "@/components/ui/stars";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
-      <div className="flex flex-col px-5 py-8 sm:px-10">
-        <Logo />
-        <main className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-12 animate-rise">{children}</main>
-        <p className="text-xs text-faint">© {new Date().getFullYear()} Reputia · Fatto in Italia</p>
+    <div className="grid min-h-dvh bg-surface lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)]">
+      <div className="flex flex-col px-5 py-7 sm:px-10">
+        <header>
+          <Logo />
+        </header>
+        <main className="mx-auto flex w-full max-w-[380px] flex-1 flex-col justify-center py-12 animate-rise">{children}</main>
+        <footer className="font-mono text-[11px] text-faint">© {new Date().getFullYear()} Reputia</footer>
       </div>
-      <aside className="relative hidden overflow-hidden bg-ink lg:block" aria-hidden>
-        <div className="absolute inset-0 bg-[radial-gradient(60%_50%_at_70%_20%,rgb(90_72_208/0.45),transparent_70%)]" />
-        <div className="relative flex h-full flex-col justify-center gap-5 px-14">
-          <p className="display max-w-md text-[40px] leading-[1.08] text-white">Ogni recensione merita una risposta all&apos;altezza della tua attività.</p>
-          <div className="mt-6 max-w-md rotate-[-1.5deg] rounded-2xl bg-white/95 p-5 shadow-pop">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-ink">Francesca M.</span>
-              <Stars rating={5} />
-            </div>
-            <p className="mt-2 text-sm leading-relaxed text-muted">Cena splendida, il risotto ai funghi era perfetto. Personale attento e simpatico.</p>
-          </div>
-          <div className="ml-10 max-w-md rotate-[1deg] rounded-2xl border border-white/10 bg-white/10 p-5 backdrop-blur">
-            <span className="text-xs font-medium tracking-wide text-white/60 uppercase">Risposta proposta</span>
-            <p className="mt-2 text-sm leading-relaxed text-white/90">Grazie Francesca! Il risotto è uno dei piatti a cui teniamo di più: siamo felici che l&apos;abbia apprezzato. A presto!</p>
-          </div>
+      <aside className="relative hidden overflow-hidden bg-night lg:flex lg:flex-col lg:justify-between lg:p-14" aria-hidden>
+        <div className="pointer-events-none absolute right-[-160px] bottom-[-160px] size-[520px] rounded-full bg-gold/[0.10] blur-[110px]" />
+        <span />
+        <div className="relative">
+          <p className="max-w-[12ch] text-[56px] leading-[0.95] font-semibold tracking-[-0.055em] text-white">
+            Mettiamoci un punto<span className="ml-[0.04em] inline-block size-[0.15em] rounded-full bg-gold-bright align-baseline" />
+          </p>
+          <p className="mt-6 max-w-[34ch] text-[15px] leading-relaxed text-white/55">Le risposte alle tue recensioni Google, scritte con cura e approvate da te.</p>
         </div>
+        <p className="relative font-mono text-[11px] text-white/55">reputia.websardegna.xyz</p>
       </aside>
     </div>
   );
