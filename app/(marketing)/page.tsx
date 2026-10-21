@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { StatusIcon } from "@/components/app/review-status";
 import { AiMark } from "@/components/ui/ai-mark";
-import { GlyphApprove, GlyphArrive, GlyphClose, GlyphDraft, GlyphFree, GlyphItalian, GlyphLink, GlyphPublish, GlyphRead, GlyphUntouched } from "@/components/marketing/glyphs";
+import { GlyphApprove, GlyphArrive, GlyphClose, GlyphDraft, GlyphFree, GlyphGoogle, GlyphItalyFlag, GlyphPublish, GlyphRead, GlyphUntouched } from "@/components/marketing/glyphs";
 import { googleConfigured } from "@/lib/google/oauth";
 import { formatEur, PLAN } from "@/lib/plans";
 import inboxShot from "@/public/marketing/inbox.png";
@@ -78,8 +78,8 @@ export default function HomePage() {
           {(
             [
               [GlyphApprove, "Nulla si pubblica senza di te"],
-              [GlyphLink, "API ufficiale di Google"],
-              [GlyphItalian, "Pensato per l'italiano"],
+              [GlyphGoogle, "API ufficiale di Google"],
+              [GlyphItalyFlag, "Pensato per l'italiano"],
               [GlyphFree, "Disdici quando vuoi"],
             ] as const
           ).map(([Glyph, t], i) => (
