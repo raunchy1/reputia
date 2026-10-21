@@ -40,6 +40,8 @@ App: 13 px liste e navigazione, 14 px corpo, 17 px testo delle recensioni, 30 px
 
 ## Iconografia
 **Lucide** per le icone funzionali (tratto 1.75, 15–16 px, sempre con etichetta), **icone di stato proprie** per il flusso delle recensioni. Nessuna emoji, nessuna «sparkle».
+**Glifi del sito** (`components/marketing/glyphs.tsx`): due forme piatte, una in inchiostro e una sempre tonda in oro sfumato (`#F3C25F → #C27C0E`, è il punto).
+Dove si sovrappongono, la forma davanti è staccata da un anello del colore di fondo (`--glyph-gap`). 24–56 px, solo nel sito; mai dentro riquadri, mai numerazioni «01 / 02 / 03» al loro posto.
 
 ## Layout dell'app
 - Sidebar 232 px, comprimibile a 56 px (solo icone con tooltip); stato salvato in un cookie.

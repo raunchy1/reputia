@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { StatusIcon } from "@/components/app/review-status";
 import { AiMark } from "@/components/ui/ai-mark";
+import { GlyphApprove, GlyphArrive, GlyphClose, GlyphDraft, GlyphFree, GlyphItalian, GlyphLink, GlyphPublish, GlyphRead, GlyphUntouched } from "@/components/marketing/glyphs";
 import { googleConfigured } from "@/lib/google/oauth";
 import { formatEur, PLAN } from "@/lib/plans";
 import inboxShot from "@/public/marketing/inbox.png";
@@ -74,9 +75,16 @@ export default function HomePage() {
       {/* ───────── Principles ───────── */}
       <section aria-label="Principi" className="border-b border-line bg-surface">
         <ul className="mx-auto grid max-w-[1200px] grid-cols-2 px-5 sm:px-8 lg:grid-cols-4">
-          {["Nulla si pubblica senza di te", "API ufficiale di Google", "Pensato per l'italiano", "Disdici quando vuoi"].map((t, i) => (
-            <li key={t} className={`flex items-center gap-2.5 py-5 text-[13px] text-ink-2 ${i % 2 ? "pl-5" : ""} ${i > 0 ? "lg:border-l lg:border-line lg:pl-6" : ""}`}>
-              <span className="size-1.5 shrink-0 rounded-full bg-gold" aria-hidden />
+          {(
+            [
+              [GlyphApprove, "Nulla si pubblica senza di te"],
+              [GlyphLink, "API ufficiale di Google"],
+              [GlyphItalian, "Pensato per l'italiano"],
+              [GlyphFree, "Disdici quando vuoi"],
+            ] as const
+          ).map(([Glyph, t], i) => (
+            <li key={t} className={`flex items-center gap-3 py-5 text-[13px] text-ink-2 ${i % 2 ? "pl-5" : ""} ${i > 0 ? "lg:border-l lg:border-line lg:pl-6" : ""}`}>
+              <Glyph className="size-7" />
               {t}
             </li>
           ))}
@@ -84,7 +92,7 @@ export default function HomePage() {
       </section>
 
       {/* ───────── How it works ───────── */}
-      <section id="come-funziona" className="scroll-mt-16 bg-canvas">
+      <section id="come-funziona" className="scroll-mt-16 bg-canvas [--glyph-gap:var(--color-canvas)]">
         <div className="mx-auto max-w-[1200px] px-5 py-28 sm:px-8">
           <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
             <h2 className="max-w-[14ch] text-[40px] leading-[1] font-semibold tracking-[-0.045em] sm:text-[56px]">
@@ -96,7 +104,7 @@ export default function HomePage() {
           </div>
 
           <ol className="mt-16 divide-y divide-line border-y border-line">
-            <Step n="01" title="Le recensioni arrivano da sole" body="Reputia importa le recensioni della tua scheda Google e le mette in fila: prima quelle che aspettano una risposta, con quelle negative in evidenza.">
+            <Step glyph={<GlyphArrive className="size-14" />} title="Le recensioni arrivano da sole" body="Reputia importa le recensioni della tua scheda Google e le mette in fila: prima quelle che aspettano una risposta, con quelle negative in evidenza.">
               <div className="grid gap-px overflow-hidden rounded-[10px] border border-line bg-line text-[13px]">
                 {[
                   ["NEW", "Paolo G.", 2, "Porzioni piccole per il prezzo."],
@@ -112,7 +120,7 @@ export default function HomePage() {
                 ))}
               </div>
             </Step>
-            <Step n="02" title="L'assistente prepara la bozza" body="Nel tono che hai scelto, con le informazioni vere della tua attività. Non promette sconti, non inventa fatti, non ammette colpe che non hai verificato.">
+            <Step glyph={<GlyphDraft className="size-14" />} title="L'assistente prepara la bozza" body="Nel tono che hai scelto, con le informazioni vere della tua attività. Non promette sconti, non inventa fatti, non ammette colpe che non hai verificato.">
               <div className="rounded-[10px] border border-line bg-surface">
                 <div className="flex items-center gap-2 border-b border-line px-4 py-2.5 font-mono text-[11px] text-muted">
                   <AiMark className="size-[6px]" /> Bozza dell&apos;assistente · Cordiale
@@ -122,7 +130,7 @@ export default function HomePage() {
                 </p>
               </div>
             </Step>
-            <Step n="03" title="Tu metti il punto" body="Rileggi, ritocchi se serve e pubblichi su Google. I collaboratori possono preparare le bozze; pubblichi solo tu o chi autorizzi.">
+            <Step glyph={<GlyphClose className="size-14" />} title="Tu metti il punto" body="Rileggi, ritocchi se serve e pubblichi su Google. I collaboratori possono preparare le bozze; pubblichi solo tu o chi autorizzi.">
               <div className="flex flex-wrap items-center gap-3 rounded-[10px] border border-line bg-surface px-4 py-3.5">
                 <span className="flex items-center gap-2 text-[13px] text-ink-2">
                   <span className="grid size-4 place-items-center rounded-[4px] bg-ink text-white">
@@ -166,14 +174,19 @@ export default function HomePage() {
             )}
           </div>
           <dl className="divide-y divide-line border-y border-line">
-            {[
-              ["Legge", "Recensioni, valutazioni e risposte già pubblicate delle sedi che colleghi."],
-              ["Pubblica", "Solo le risposte che approvi tu o un amministratore, con un clic esplicito."],
-              ["Non tocca", "Orari, foto e dati della scheda. Nessun accesso a email o altri servizi Google."],
-            ].map(([k, v]) => (
-              <div key={k} className="grid grid-cols-[110px_1fr] gap-6 py-6">
-                <dt className="font-mono text-[12px] text-muted">{k}</dt>
-                <dd className="text-[16px] leading-relaxed text-ink">{v}</dd>
+            {(
+              [
+                [GlyphRead, "Legge", "Recensioni, valutazioni e risposte già pubblicate delle sedi che colleghi."],
+                [GlyphPublish, "Pubblica", "Solo le risposte che approvi tu o un amministratore, con un clic esplicito."],
+                [GlyphUntouched, "Non tocca", "Orari, foto e dati della scheda. Nessun accesso a email o altri servizi Google."],
+              ] as const
+            ).map(([Glyph, k, v]) => (
+              <div key={k} className="grid grid-cols-[44px_1fr] gap-5 py-6 sm:gap-6">
+                <Glyph className="size-11" />
+                <div>
+                  <dt className="text-[17px] font-semibold tracking-[-0.02em]">{k}</dt>
+                  <dd className="mt-1 text-[15px] leading-relaxed text-muted">{v}</dd>
+                </div>
               </div>
             ))}
           </dl>
@@ -254,12 +267,12 @@ export default function HomePage() {
   );
 }
 
-function Step({ n, title, body, children }: { n: string; title: string; body: string; children: React.ReactNode }) {
+function Step({ glyph, title, body, children }: { glyph: React.ReactNode; title: string; body: string; children: React.ReactNode }) {
   return (
-    <li className="grid gap-8 py-12 lg:grid-cols-[80px_minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-12">
-      <span className="font-mono text-[13px] text-muted">{n}</span>
+    <li className="grid gap-8 py-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
       <div>
-        <h3 className="text-[24px] leading-tight font-semibold tracking-[-0.03em]">{title}</h3>
+        {glyph}
+        <h3 className="mt-6 text-[24px] leading-tight font-semibold tracking-[-0.03em]">{title}</h3>
         <p className="mt-3 max-w-[42ch] text-[16px] leading-relaxed text-muted">{body}</p>
       </div>
       <div className="self-center">{children}</div>
