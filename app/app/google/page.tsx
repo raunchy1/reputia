@@ -77,7 +77,7 @@ export default async function GooglePage({ searchParams }: { searchParams: Promi
                 {state === "reconnect" && <Badge tone="danger">Da ricollegare</Badge>}
                 {state === "unavailable" && <Badge>Non ancora disponibile</Badge>}
                 {state === "disconnected" && <Badge>Non collegato</Badge>}
-                {mock && <Badge tone="warning">Simulazione attiva</Badge>}
+                {mock && <Badge tone="gold">Simulazione attiva</Badge>}
               </div>
               <p className="mt-1 text-[13px] text-muted">
                 {state === "connected" && `Account: ${google.filter((c) => c.status === "ACTIVE").map((c) => c.accountEmail ?? "Google").join(", ")}`}
@@ -123,7 +123,7 @@ export default async function GooglePage({ searchParams }: { searchParams: Promi
                   {!l.connection ? (
                     <Badge>Non collegata</Badge>
                   ) : l.connection.provider === "MOCK" ? (
-                    <Badge tone="warning">Simulazione</Badge>
+                    <Badge tone="gold">Simulazione</Badge>
                   ) : l.connection.status === "ACTIVE" ? (
                     <Badge tone="positive">
                       <CheckCircle2 className="size-3" aria-hidden /> Collegata

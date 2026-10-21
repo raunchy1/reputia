@@ -86,10 +86,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
           <section className="panel p-5" aria-labelledby="activity-title">
             <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-              <h2 id="activity-title" className="text-sm font-semibold">
+              <h2 id="activity-title" className="text-[14px] font-semibold">
                 Attività delle ultime 12 settimane
               </h2>
-              <p className="text-xs text-faint">
+              <p className="font-mono text-[11px] text-faint">
                 {simulated ? "Dati della simulazione" : "Dati da Google"}
                 {lastSync && ` · aggiornato ${relativeDate(lastSync)}`}
               </p>
@@ -115,14 +115,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                 {recent.map((r) => (
                   <li key={r.id}>
                     <Link href={`/app/recensioni?stato=tutte&r=${r.id}`} className="flex items-start gap-3 px-5 py-3 transition-colors hover:bg-subtle/70">
-                      <RatingMark rating={r.rating} className="mt-0.5" />
+                      <ReviewStatusBadge status={r.status} iconOnly className="mt-[3px]" />
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-baseline gap-2">
                           <span className="truncate text-[13px] font-medium">{r.authorName}</span>
-                          <span className="ml-auto shrink-0 text-xs text-faint">{relativeDate(r.reviewedAt)}</span>
+                          <RatingMark rating={r.rating} />
+                          <span className="ml-auto shrink-0 font-mono text-[11px] text-faint">{relativeDate(r.reviewedAt)}</span>
                         </div>
                         <p className="mt-0.5 line-clamp-1 text-[13px] text-muted">{r.comment ?? "Solo valutazione"}</p>
-                        <ReviewStatusBadge status={r.status} className="mt-1" />
                       </div>
                     </Link>
                   </li>
@@ -136,17 +136,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   );
 }
 
-function NextAction({ icon: Icon, title, body, href, cta, emphasis }: { icon: typeof Inbox; title: string; body: string; href: string; cta: string; emphasis?: boolean }) {
+/** The one thing to do now. The gold dot means "this needs your word". */
+function NextAction({ title, body, href, cta, emphasis }: { icon?: unknown; title: string; body: string; href: string; cta: string; emphasis?: boolean }) {
   return (
-    <div className={emphasis ? "flex flex-wrap items-center gap-4 rounded-[var(--radius-panel)] border border-accent-line bg-accent-soft/50 px-5 py-4" : "flex flex-wrap items-center gap-4 rounded-[var(--radius-panel)] border border-line bg-canvas px-5 py-4"}>
-      <span className={emphasis ? "grid size-9 place-items-center rounded-md bg-accent text-white" : "grid size-9 place-items-center rounded-md border border-line bg-surface text-muted"}>
-        <Icon className="size-4" strokeWidth={1.75} aria-hidden />
-      </span>
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-[var(--radius-panel)] border border-line bg-surface px-5 py-4 shadow-card">
+      <span className={emphasis ? "size-2.5 shrink-0 rounded-full bg-gold ring-4 ring-gold-soft" : "size-2.5 shrink-0 rounded-full bg-line-strong"} aria-hidden />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold">{title}</p>
+        <p className="text-[15px] font-semibold tracking-[-0.01em]">{title}</p>
         <p className="text-[13px] text-muted">{body}</p>
       </div>
-      <ButtonLink href={href} variant={emphasis ? "accent" : "secondary"}>
+      <ButtonLink href={href} variant={emphasis ? "primary" : "secondary"}>
         {cta} <ArrowRight aria-hidden />
       </ButtonLink>
     </div>
@@ -156,9 +155,9 @@ function NextAction({ icon: Icon, title, body, href, cta, emphasis }: { icon: ty
 function Metric({ label, value, unit, note, children }: { label: string; value: string; unit?: string; note?: string; children?: React.ReactNode }) {
   return (
     <div className="border-line px-5 py-4 [&:not(:last-child)]:border-r max-lg:[&:nth-child(2)]:border-r-0 max-lg:[&:nth-child(-n+2)]:border-b">
-      <dt className="text-xs font-medium text-muted">{label}</dt>
+      <dt className="font-mono text-[11px] text-muted">{label}</dt>
       <dd className="mt-1.5 flex items-baseline gap-1.5">
-        <span className="text-[28px] leading-none font-semibold tracking-[-0.02em] tabular-nums">{value}</span>
+        <span className="text-[30px] leading-none font-semibold tracking-[-0.04em]">{value}</span>
         {unit && <span className="text-xs text-faint">{unit}</span>}
       </dd>
       {children && <dd className="mt-1.5">{children}</dd>}

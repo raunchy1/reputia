@@ -48,7 +48,7 @@ export default async function OnboardingGooglePage({ searchParams }: { searchPar
         <div className="panel p-5">
           <div className="flex items-center gap-2">
             <p className="text-sm font-semibold">Simulazione</p>
-            <Badge tone="warning">Dati di esempio</Badge>
+            <Badge tone="gold">Dati di esempio</Badge>
           </div>
           <p className="mt-1 text-[13px] text-muted">12 recensioni realistiche per provare l&apos;assistente. Le risposte «pubblicate» restano in Reputia e non arrivano su Google.</p>
           <SimulationButton />

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CommandMenu } from "@/components/app/command-menu";
 import { Sidebar } from "@/components/app/sidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { getEntitlement } from "@/lib/billing/entitlement";
@@ -50,10 +51,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="min-w-0 flex-1 lg:py-2 lg:pr-2">
         <main id="contenuto" tabIndex={-1} className="flex min-h-[calc(100dvh-48px)] flex-col bg-surface focus:outline-none lg:min-h-[calc(100dvh-16px)] lg:rounded-[var(--radius-panel)] lg:border lg:border-line lg:shadow-card">
           {mock > 0 && (
-            <div role="note" className="flex items-center justify-center gap-2 border-b border-warning/15 bg-warning-soft px-4 py-1.5 text-center text-xs text-warning lg:rounded-t-[var(--radius-panel)]">
-              <span className="size-1.5 shrink-0 rounded-full bg-warning" aria-hidden />
+            <div role="note" className="flex items-center justify-center gap-2 border-b border-line bg-canvas px-4 py-1.5 text-center text-xs text-muted lg:rounded-t-[var(--radius-panel)]">
+              <span className="size-1.5 shrink-0 rounded-full bg-gold" aria-hidden />
               <span>
-                <strong className="font-semibold">Simulazione:</strong> recensioni di esempio, nulla viene pubblicato su Google.{" "}
+                <strong className="font-medium text-ink">Simulazione</strong> · recensioni di esempio, nulla viene pubblicato su Google.{" "}
                 <Link href="/app/google" className="font-medium underline underline-offset-2">
                   Collega Google
                 </Link>
@@ -63,6 +64,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+      <CommandMenu />
       <Toaster />
     </div>
   );

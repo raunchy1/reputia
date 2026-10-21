@@ -34,7 +34,7 @@ export function MenuItem({ className, ...props }: ComponentProps<typeof M.Item>)
 }
 
 export function MenuLabel({ children }: { children: ReactNode }) {
-  return <M.Label className="px-2 pt-1.5 pb-1 text-[11px] font-medium tracking-wide text-faint uppercase">{children}</M.Label>;
+  return <M.Label className="truncate px-2 pt-1.5 pb-1 font-mono text-[11px] text-faint">{children}</M.Label>;
 }
 
 export function MenuSeparator() {

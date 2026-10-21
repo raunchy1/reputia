@@ -14,6 +14,7 @@ function niceMax(n: number) {
 /** Grouped weekly columns. Series colours validated with the dataviz checker; identity also via legend + table. */
 export function ActivityChart({ data }: { data: WeekPoint[] }) {
   const [hover, setHover] = useState<number | null>(null);
+  const [asTable, setAsTable] = useState(false);
   // Draw at the real container width so axis text stays legible on phones instead of shrinking with the SVG.
   const box = useRef<HTMLDivElement>(null);
   const [W, setW] = useState(640);
@@ -52,11 +53,14 @@ export function ActivityChart({ data }: { data: WeekPoint[] }) {
         <span className="inline-flex items-center gap-1.5">
           <span className="size-2.5 rounded-[3px] bg-chart-replied" aria-hidden /> Risposte pubblicate
         </span>
-        <span className="ml-auto h-4 text-ink-2 tabular-nums" aria-live="polite">
-          {active && `Settimana del ${fmt.format(new Date(active.weekStart))}: ${active.received} ricevute · ${active.replied} risposte`}
+        <span className="ml-auto h-4 font-mono text-[11px] text-ink-2" aria-live="polite">
+          {active && `${fmt.format(new Date(active.weekStart))} · ${active.received} ricevute · ${active.replied} risposte`}
         </span>
+        <button type="button" onClick={() => setAsTable((t) => !t)} className="rounded px-1.5 py-0.5 font-mono text-[11px] text-muted hover:bg-subtle hover:text-ink" aria-pressed={asTable}>
+          {asTable ? "Grafico" : "Tabella"}
+        </button>
       </figcaption>
-      <div ref={box}>
+      <div ref={box} hidden={asTable}>
       <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="block max-w-full" role="img" aria-label="Recensioni ricevute e risposte pubblicate per settimana, ultime 12 settimane">
         {ticks.map((t) => (
           <g key={t}>
@@ -83,21 +87,21 @@ export function ActivityChart({ data }: { data: WeekPoint[] }) {
         })}
       </svg>
       </div>
-      <table className="sr-only">
-        <caption>Attività settimanale</caption>
+      <table className={asTable ? "w-full font-mono text-[12px]" : "sr-only"}>
+        <caption className="sr-only">Attività settimanale</caption>
         <thead>
-          <tr>
-            <th>Settimana</th>
-            <th>Recensioni ricevute</th>
-            <th>Risposte pubblicate</th>
+          <tr className="border-b border-line text-left text-muted">
+            <th className="py-1.5 font-medium">Settimana</th>
+            <th className="py-1.5 text-right font-medium">Ricevute</th>
+            <th className="py-1.5 text-right font-medium">Risposte</th>
           </tr>
         </thead>
         <tbody>
           {data.map((d) => (
-            <tr key={d.weekStart}>
-              <td>{fmt.format(new Date(d.weekStart))}</td>
-              <td>{d.received}</td>
-              <td>{d.replied}</td>
+            <tr key={d.weekStart} className="border-b border-line last:border-0">
+              <td className="py-1.5 text-ink-2">{fmt.format(new Date(d.weekStart))}</td>
+              <td className="py-1.5 text-right">{d.received}</td>
+              <td className="py-1.5 text-right">{d.replied}</td>
             </tr>
           ))}
         </tbody>

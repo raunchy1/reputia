@@ -1,6 +1,5 @@
 import { ArrowLeft, MapPin } from "lucide-react";
 import Link from "next/link";
-import { Avatar } from "@/components/app/avatar";
 import { ReplyComposer } from "@/components/reviews/reply-composer";
 import { Stars } from "@/components/ui/stars";
 import { sentimentFor } from "@/lib/ai/prompt";
@@ -25,12 +24,11 @@ export function ReviewDetail({ review, canPublish, backHref }: { review: Review;
       </div>
       <div className="mx-auto grid max-w-2xl gap-5 px-4 py-6 sm:px-6 lg:py-8">
         <header className="flex items-start gap-3">
-          <Avatar name={review.authorName} />
           <div className="min-w-0 flex-1">
-            <h2 id="review-author" className="text-[15px] font-semibold">
+            <h2 id="review-author" className="text-lg font-semibold tracking-[-0.015em]">
               {review.authorName}
             </h2>
-            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted">
+            <p className="mt-1 flex flex-wrap items-center gap-x-2 font-mono text-[11px] text-muted">
               <time dateTime={review.reviewedAt.toISOString()} title={longDate(review.reviewedAt)}>
                 {relativeDate(review.reviewedAt)}
               </time>
@@ -42,7 +40,7 @@ export function ReviewDetail({ review, canPublish, backHref }: { review: Review;
               {review.source === "MOCK" && (
                 <>
                   <span aria-hidden>·</span>
-                  <span className="font-medium text-warning">Simulazione</span>
+                  <span className="inline-flex items-center gap-1 text-ink-2"><span className="size-1.5 rounded-full bg-gold" aria-hidden />Simulazione</span>
                 </>
               )}
             </p>
@@ -54,7 +52,7 @@ export function ReviewDetail({ review, canPublish, backHref }: { review: Review;
             <Stars rating={review.rating} className="[&_svg]:size-4" />
             {sentiment === "negativa" && <span className="text-xs font-medium text-danger">Recensione negativa</span>}
           </div>
-          <p className="mt-3 max-w-[68ch] text-base leading-[1.65] whitespace-pre-line text-ink">
+          <p className="mt-3 max-w-[64ch] text-[17px] leading-[1.6] tracking-[-0.01em] whitespace-pre-line text-ink">
             {review.comment ?? <span className="text-muted italic">Il cliente ha lasciato solo la valutazione, senza testo.</span>}
           </p>
           {sentiment === "negativa" && review.status !== "PUBLISHED" && (
@@ -66,7 +64,7 @@ export function ReviewDetail({ review, canPublish, backHref }: { review: Review;
 
         {review.status === "PUBLISHED" && review.replyPublishedAt && (
           <div className="rounded-[var(--radius-panel)] border border-line bg-canvas px-4 py-3">
-            <p className="text-xs font-medium text-positive">Risposta pubblica · {relativeDate(review.replyPublishedAt)}</p>
+            <p className="font-mono text-[11px] text-positive">Risposta pubblica · {relativeDate(review.replyPublishedAt)}</p>
             <p className="mt-1.5 text-[13px] leading-relaxed whitespace-pre-line text-ink-2">{review.replyText}</p>
           </div>
         )}

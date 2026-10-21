@@ -1,40 +1,37 @@
-# Reputia — Design system
+# Reputia — Design system (v2, «il punto»)
 
-Direzione scelta: **«Calma operativa»**. Un prodotto di lavoro quotidiano, sobrio e preciso come Linear e Intercom
-(vedi `MOBBIN_RESEARCH.md`), con un'identità italiana affidata alla tipografia editoriale del sito pubblico.
-Un solo accento, superfici piatte, linee sottili, densità media: un titolare deve capire lo stato delle recensioni
-in tre secondi senza sentirsi in un pannello per sviluppatori.
+> v2 del 21 ottobre 2026. La v1 («calma operativa», accento indigo, Fraunces) è stata scartata perché ricadeva nei cliché dei prodotti AI:
+> accento viola, icona «sparkles», titoli serif centrati, icone in riquadri, avatar pastello.
+> Identità del marchio: `docs/brand/BRAND.md`.
 
-Token in `app/globals.css` (`@theme`). Nei componenti si usano solo i nomi semantici, mai valori esadecimali.
+## Direzione
+Monocromo come Linear: inchiostro quasi nero per testo e azioni, carta calda per le superfici, linee sottili.
+Un solo colore di marca, l'oro, usato **solo** per il punto: ciò che aspetta la tua parola e ciò che ha scritto l'assistente.
+Densità da strumento professionale (righe da 30 px nella navigazione, metadati in monospace), tastiera di prima classe
+(⌘K, J/K, /), sito con sezioni notte e la vera interfaccia come illustrazione.
 
-## Colore
-| Token | Valore | Uso |
-|-------|--------|-----|
-| `canvas` | `#FAFAF8` | Sfondo dell'app e della sidebar |
-| `surface` | `#FFFFFF` | Pannelli, liste, campi |
-| `subtle` | `#F4F4F1` | Hover, righe selezionate, sezioni secondarie |
-| `ink` | `#1B2430` | Testo principale, pulsante primario |
-| `ink-2` | `#3A4553` | Testo forte secondario |
-| `muted` | `#545C6A` | Testo secondario (6.6:1 su bianco) |
-| `faint` | `#666E7C` | Metadati, date, placeholder (≥ 4.6:1 su tutte le superfici, verificato con axe) |
-| `line` | `#E8E8E3` | Divisori e bordi |
-| `line-strong` | `#D9D9D2` | Bordi dei campi |
-| `accent` | `#4C51C6` | Unico accento: selezione, AI, link, focus |
-| `accent-soft` | `#EEEFFB` | Sfondi dell'accento |
-| `positive` / `-soft` | `#1D7A50` / `#E9F5EE` | Pubblicata, collegato |
-| `warning` / `-soft` | `#9A5B0F` / `#FBF2E2` | Bozza, simulazione, prova in scadenza |
-| `danger` / `-soft` | `#B42318` / `#FCEDEB` | Errore, recensioni 1–2 stelle (solo come segno, mai come sfondo pieno) |
-| `star` | `#D9962B` | Stelle |
-
-Niente gradienti nell'app. Il sito usa un solo sfondo scuro (`ink`) per la sezione «Perché rispondere».
+## Token principali (`app/globals.css`)
+| Token | Valore | Ruolo |
+|---|---|---|
+| `canvas` / `surface` / `subtle` | `#F7F7F5` / `#FFFFFF` / `#F2F2EF` | Carta, pannelli, hover |
+| `ink` / `ink-2` | `#0E1116` / `#2B3038` | Testo e azioni |
+| `muted` / `faint` | `#555B66` / `#646C7A` | Secondario, metadati (≥ 4.5:1 ovunque) |
+| `line` / `line-strong` | `#EAEAE6` / `#DCDCD7` | Divisori, bordi dei campi |
+| `accent` / `accent-soft` | `#0E1116` / `#EFEFEC` | Interazione monocroma, selezione |
+| `gold` / `gold-bright` / `gold-ink` | `#D4961F` / `#E8B04A` / `#845400` | Il punto; su scuro; testo oro AA |
+| `night` | `#0B0D10` | Sezioni scure del sito |
 
 ## Tipografia
-Due famiglie, entrambe con ottimo supporto per le lettere accentate italiane:
-- **Geist** — tutta l'interfaccia, i numeri (`tabular-nums`) e il corpo del sito.
-- **Fraunces** (assi `opsz`, `SOFT`) — solo titoli del sito pubblico e dei passaggi di autenticazione. Dà il carattere editoriale europeo che distingue Reputia dai SaaS generici; non entra mai nell'app operativa.
+Host Grotesk (interfaccia e titoli) + IBM Plex Mono (metadati). Titoli del sito 52–104 px, peso 600, spaziatura −5,5 %, interlinea 0,95.
+App: 13 px liste e navigazione, 14 px corpo, 17 px testo delle recensioni, 30 px metriche.
 
-Scala dell'app (px / line-height): 12/16 metadati · 13/20 etichette, liste · 14/22 corpo · 16/24 testo recensioni · 20/28 titoli di pannello · 24/32 titoli di pagina · 28/34 metriche.
-Sito: 48–72 hero (Fraunces 400), 36–44 titoli di sezione, 17/28 corpo.
+## Elementi firma
+- **Icone di stato disegnate** (`StatusIcon`): anello che si riempie verso la pubblicazione; punto oro = da gestire.
+- **`AiMark`**: il punto oro marca il testo scritto dall'assistente. Mai scintille.
+- **Paletta comandi ⌘K** con ricerca delle recensioni lato server; **J/K** per scorrere la casella, **/** per cercare.
+- **Il punto tondo** chiude i titoli del sito (il punto del carattere è quadrato e non si usa).
+
+---
 
 ## Spaziatura, raggi, ombre
 - Griglia da 4 px. Righe di lista da 56–64 px, controlli da 32 (sm) / 36 (md) / 44 (lg).
@@ -42,7 +39,7 @@ Sito: 48–72 hero (Fraunces 400), 36–44 titoli di sezione, 17/28 corpo.
 - Ombre: nessuna sui pannelli dell'app (bastano le linee); `shadow-pop` solo per menu, dialog, toast.
 
 ## Iconografia
-**Lucide** (già nel progetto, tree-shaking, set ampio e neutro). Tratto `1.75`, 16 px nella UI, 18 px nella navigazione, sempre affiancate da un'etichetta testuale. Nessuna emoji come icona.
+**Lucide** per le icone funzionali (tratto 1.75, 15–16 px, sempre con etichetta), **icone di stato proprie** per il flusso delle recensioni. Nessuna emoji, nessuna «sparkle».
 
 ## Layout dell'app
 - Sidebar 232 px, comprimibile a 56 px (solo icone con tooltip); stato salvato in un cookie.

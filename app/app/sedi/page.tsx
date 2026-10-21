@@ -48,7 +48,7 @@ export default async function LocationsPage() {
                     Collega a Google
                   </Link>
                 ) : l.connection.provider === "MOCK" ? (
-                  <Badge tone="warning">Simulazione</Badge>
+                  <Badge tone="gold">Simulazione</Badge>
                 ) : l.connection.status === "ACTIVE" ? (
                   <Badge tone="positive">Google collegato</Badge>
                 ) : (

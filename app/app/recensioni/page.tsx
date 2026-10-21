@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { InboxKeys } from "@/components/reviews/inbox-keys";
 import { InboxToolbar } from "@/components/reviews/inbox-toolbar";
 import { ReviewDetail } from "@/components/reviews/review-detail";
 import { ReviewFilters } from "@/components/reviews/review-filters";
@@ -48,10 +49,11 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
 
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:h-[calc(100dvh-18px)] lg:flex-row">
+      <InboxKeys />
       {/* Filters rail */}
       <aside className={cn("shrink-0 border-line lg:w-56 lg:border-r", detailOpenOnMobile && "hidden lg:block")}>
         <div className="flex h-12 items-center justify-between border-b border-line px-4">
-          <h1 className="text-[15px] font-semibold">Recensioni</h1>
+          <h1 className="text-[14px] font-semibold">Recensioni</h1>
           <SyncButton compact />
         </div>
         <div className="hidden p-2 lg:block">
@@ -65,9 +67,9 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
               href={hrefFor({ stato: k === "da-gestire" ? null : k, r: null })}
               scroll={false}
               aria-current={status === k ? "true" : undefined}
-              className={cn("shrink-0 rounded-md px-2.5 py-1 text-[13px]", status === k ? "bg-ink text-white" : "text-ink-2 hover:bg-subtle")}
+              className={cn("shrink-0 rounded-md px-2.5 py-1 text-[13px]", status === k ? "bg-accent-soft font-medium text-ink" : "text-ink-2 hover:bg-subtle")}
             >
-              {STATUS_FILTERS[k].label} <span className="tabular-nums opacity-70">{counts.status[k]}</span>
+              {STATUS_FILTERS[k].label} <span className="font-mono text-[11px] text-muted">{counts.status[k]}</span>
             </Link>
           ))}
         </nav>
@@ -98,7 +100,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
       </section>
 
       {/* Detail */}
-      <section aria-label="Dettaglio recensione" className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto bg-canvas/40", !detailOpenOnMobile && "hidden lg:block")}>
+      <section aria-label="Dettaglio recensione" className={cn("min-h-0 min-w-0 flex-1 overflow-y-auto", !detailOpenOnMobile && "hidden lg:block")}>
         {selected ? (
           <ReviewDetail key={selected.id} review={selected} canPublish={hasRole(ctx.role, "admin")} backHref={hrefFor({ r: null })} />
         ) : (

@@ -1,9 +1,10 @@
 "use client";
-import { AlertTriangle, Archive, ArchiveRestore, Check, Copy, Send, Sparkles, UserCheck } from "lucide-react";
+import { AlertTriangle, Archive, ArchiveRestore, Check, Copy, Send, UserCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ReviewStatusBadge } from "@/components/app/review-status";
+import { AiMark } from "@/components/ui/ai-mark";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/field";
@@ -102,21 +103,26 @@ export function ReplyComposer(p: ComposerProps) {
   const publishBlocked = !p.connection ? "Collega la sede a Google per pubblicare." : !p.connection.active ? "Il collegamento Google va rinnovato." : null;
 
   return (
-    <section aria-labelledby="composer-title" className="flex flex-col rounded-[var(--radius-panel)] border border-line bg-surface shadow-card">
+    <section aria-labelledby="composer-title" className="@container flex flex-col rounded-[var(--radius-panel)] border border-line-strong bg-surface shadow-[0_1px_2px_rgb(14_17_22/0.04),0_8px_24px_-12px_rgb(14_17_22/0.10)] focus-within:border-ink/30">
       <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line px-4 py-2.5">
         <h2 id="composer-title" className="text-[13px] font-semibold">
           {published ? "Risposta pubblicata" : "La tua risposta"}
         </h2>
         <ReviewStatusBadge status={p.status} />
-        {p.provenance && <span className="text-xs text-faint">{p.provenance}</span>}
+        {p.provenance && (
+          <span className="flex items-center gap-1.5 font-mono text-[11px] text-muted">
+            {p.provenance.startsWith("Bozza AI") && <AiMark className="size-[6px]" />}
+            {p.provenance}
+          </span>
+        )}
         {dirty && hasText && !generating && <span className="text-xs text-warning">Modifiche non salvate</span>}
       </header>
 
-      <div className="flex flex-wrap items-center gap-2 border-b border-line bg-canvas/60 px-4 py-2">
+      <div className="flex items-center gap-2 border-b border-line px-4 py-2">
         <CompactSelect label="Tono" value={tone} onChange={(v) => setTone(v as ReplyTone)} options={TONE_LABELS} disabled={generating} />
         <CompactSelect label="Lunghezza" value={length} onChange={(v) => setLength(v as ReplyLength)} options={LENGTH_LABELS} disabled={generating} />
-        <Button type="button" variant="accent" size="sm" onClick={generate} disabled={generating || busy || archived} aria-busy={generating} className="ml-auto">
-          {generating ? <Spinner /> : <Sparkles aria-hidden />}
+        <Button type="button" size="sm" onClick={generate} disabled={generating || busy || archived} aria-busy={generating} className="ml-auto shrink-0">
+          {generating ? <Spinner /> : <AiMark className="bg-gold-bright" />}
           {generating ? "Sto scrivendo…" : hasText ? "Rigenera" : "Genera risposta"}
         </Button>
       </div>
@@ -143,8 +149,8 @@ export function ReplyComposer(p: ComposerProps) {
         />
         {generating && (
           <div className="absolute inset-0 px-4 py-4" role="status" aria-live="polite">
-            <p className="mb-3 flex items-center gap-2 text-xs font-medium text-accent">
-              <Sparkles className="size-3.5" aria-hidden /> L&apos;assistente sta scrivendo una risposta per {p.authorName.split(" ")[0]}…
+            <p className="mb-3 flex items-center gap-2 text-xs font-medium text-gold-ink">
+              <AiMark className="animate-pulse" /> L&apos;assistente sta scrivendo una risposta per {p.authorName.split(" ")[0]}…
             </p>
             <div className="grid gap-2.5" aria-hidden>
               <span className="skeleton h-3 w-[92%]" />
@@ -176,7 +182,7 @@ export function ReplyComposer(p: ComposerProps) {
       )}
 
       <footer className="flex flex-wrap items-center gap-2 border-t border-line px-4 py-2.5">
-        <span id="reply-meta" className={cn("text-xs tabular-nums", tooLong ? "text-danger" : "text-faint")}>
+        <span id="reply-meta" className={cn("font-mono text-[11px]", tooLong ? "text-danger" : "text-faint")}>
           {text.length} caratteri{tooLong && " · oltre il limite di Google"}
         </span>
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
@@ -213,7 +219,7 @@ export function ReplyComposer(p: ComposerProps) {
         </div>
       </footer>
       {!p.compact && ((publishBlocked && p.canPublish) || !published) ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-canvas/60 px-4 py-2 text-xs text-muted lg:rounded-b-[var(--radius-panel)]">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line bg-canvas px-4 py-2 text-xs text-muted lg:rounded-b-[var(--radius-panel)]">
           <span>{publishBlocked && p.canPublish ? publishBlocked : "Nulla viene pubblicato senza la tua conferma."}</span>
           {!published && (
             <button type="button" className="inline-flex items-center gap-1 font-medium text-muted hover:text-ink" disabled={busy} onClick={() => run(() => archiveAction(p.reviewId, archived))}>
@@ -262,13 +268,14 @@ function PublishDialog({ text, author, simulated, flags, busy, onConfirm }: { te
 
 function CompactSelect({ label, value, onChange, options, disabled }: { label: string; value: string; onChange: (v: string) => void; options: Record<string, string>; disabled?: boolean }) {
   return (
-    <label className="flex items-center gap-1.5 text-xs text-muted">
-      {label}
+    <label className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
+      <span className="sr-only @lg:not-sr-only">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="h-7 appearance-none rounded-md border border-line-strong bg-surface bg-[url(/chevron.svg)] bg-[length:12px] bg-[right_6px_center] bg-no-repeat pr-6 pl-2 text-xs font-medium text-ink hover:border-ink/25 focus:border-accent focus:outline-none focus:ring-3 focus:ring-accent/15 disabled:opacity-50"
+        aria-label={label}
+        className="h-7 max-w-[11rem] min-w-0 appearance-none truncate rounded-md border border-line-strong bg-surface bg-[url(/chevron.svg)] bg-[length:12px] bg-[right_6px_center] bg-no-repeat pr-6 pl-2 text-xs font-medium text-ink hover:border-ink/25 focus:border-accent focus:outline-none focus:ring-3 focus:ring-accent/15 disabled:opacity-50"
       >
         {Object.entries(options).map(([k, v]) => (
           <option key={k} value={k}>

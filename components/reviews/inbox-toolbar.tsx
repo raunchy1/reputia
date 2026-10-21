@@ -2,6 +2,7 @@
 import { ArrowDownUp, Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
+import { Kbd } from "@/components/ui/kbd";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { cn } from "@/lib/cn";
 
@@ -45,9 +46,10 @@ export function InboxToolbar({ total }: { total: number }) {
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Cerca per nome o testo…"
-          className="h-8 w-full rounded-md border border-transparent bg-subtle pr-7 pl-8 text-[13px] placeholder:text-faint focus:border-accent focus:bg-surface focus:outline-none focus:ring-3 focus:ring-accent/15 [&::-webkit-search-cancel-button]:hidden"
+          placeholder="Cerca"
+          className="h-8 w-full rounded-md border border-transparent bg-subtle pr-8 pl-8 text-[13px] placeholder:text-faint focus:border-accent focus:bg-surface focus:outline-none focus:ring-3 focus:ring-accent/15 [&::-webkit-search-cancel-button]:hidden"
         />
+        {!q && <Kbd className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2">/</Kbd>}
         {q && (
           <button type="button" onClick={() => setQ("")} className="absolute top-1/2 right-1.5 -translate-y-1/2 rounded p-0.5 text-faint hover:text-ink" aria-label="Cancella ricerca">
             <X className="size-3.5" />

@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { Avatar } from "@/components/app/avatar";
-import { ReviewStatusBadge } from "@/components/app/review-status";
+import { StatusIcon, STATUS_META } from "@/components/app/review-status";
 import { RatingMark } from "@/components/reviews/rating-mark";
 import { cn } from "@/lib/cn";
 import { relativeDate } from "@/lib/format";
@@ -23,25 +22,23 @@ export function ReviewRow({ review, href, selected, autoSelected, showLocation }
       <Link
         href={href}
         scroll={false}
+        data-review-row
         aria-current={selected ? "true" : undefined}
+        aria-label={`${review.authorName}, ${review.rating} stelle, ${STATUS_META[review.status].label}`}
         className={cn(
-          "relative flex gap-3 border-b border-line px-4 py-3 transition-colors duration-[120ms] focus-visible:-outline-offset-2",
-          selected ? "bg-accent-soft/60" : autoSelected ? "hover:bg-subtle/70 lg:bg-accent-soft/60" : "hover:bg-subtle/70",
+          "group relative grid grid-cols-[14px_minmax(0,1fr)] gap-x-3 border-b border-line px-4 py-3 transition-colors duration-[120ms] focus-visible:-outline-offset-2",
+          selected ? "bg-accent-soft" : autoSelected ? "hover:bg-subtle/70 lg:bg-accent-soft" : "hover:bg-subtle/70",
         )}
       >
-        {(selected || autoSelected) && <span className={cn("absolute inset-y-0 left-0 w-0.5 bg-accent", !selected && "hidden lg:block")} aria-hidden />}
-        <Avatar name={review.authorName} />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate text-[13px] font-semibold">{review.authorName}</span>
+        <StatusIcon status={review.status} className="mt-[3px]" />
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span className={cn("truncate text-[13px]", review.status === "NEW" ? "font-semibold text-ink" : "font-medium text-ink-2")}>{review.authorName}</span>
             <RatingMark rating={review.rating} />
-            <span className="ml-auto shrink-0 text-xs text-faint">{relativeDate(review.reviewedAt)}</span>
+            <span className="ml-auto shrink-0 font-mono text-[11px] text-faint">{relativeDate(review.reviewedAt)}</span>
           </div>
-          <p className="mt-1 line-clamp-2 text-[13px] leading-[1.45] text-muted">{review.comment ?? <span className="italic">Solo valutazione, senza testo</span>}</p>
-          <div className="mt-1.5 flex items-center gap-2">
-            <ReviewStatusBadge status={review.status} />
-            {showLocation && <span className="truncate text-xs text-faint">· {review.location.name}</span>}
-          </div>
+          <p className="mt-0.5 line-clamp-2 text-[13px] leading-[1.5] text-muted">{review.comment ?? <span className="italic">Solo valutazione, senza testo</span>}</p>
+          {showLocation && <p className="mt-1 truncate font-mono text-[11px] text-faint">{review.location.name}</p>}
         </div>
       </Link>
     </li>
