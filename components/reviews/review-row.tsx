@@ -16,7 +16,8 @@ export type RowReview = {
   location: { name: string };
 };
 
-export function ReviewRow({ review, href, selected, showLocation }: { review: RowReview; href: string; selected: boolean; showLocation: boolean }) {
+/** `selected` = chosen by the user; `autoSelected` = first row shown in the desktop detail pane only. */
+export function ReviewRow({ review, href, selected, autoSelected, showLocation }: { review: RowReview; href: string; selected: boolean; autoSelected?: boolean; showLocation: boolean }) {
   return (
     <li>
       <Link
@@ -25,10 +26,10 @@ export function ReviewRow({ review, href, selected, showLocation }: { review: Ro
         aria-current={selected ? "true" : undefined}
         className={cn(
           "relative flex gap-3 border-b border-line px-4 py-3 transition-colors duration-[120ms] focus-visible:-outline-offset-2",
-          selected ? "bg-accent-soft/60" : "hover:bg-subtle/70",
+          selected ? "bg-accent-soft/60" : autoSelected ? "hover:bg-subtle/70 lg:bg-accent-soft/60" : "hover:bg-subtle/70",
         )}
       >
-        {selected && <span className="absolute inset-y-0 left-0 w-0.5 bg-accent" aria-hidden />}
+        {(selected || autoSelected) && <span className={cn("absolute inset-y-0 left-0 w-0.5 bg-accent", !selected && "hidden lg:block")} aria-hidden />}
         <Avatar name={review.authorName} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">

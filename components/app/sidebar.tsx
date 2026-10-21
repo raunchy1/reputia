@@ -59,7 +59,7 @@ export function Sidebar(props: SidebarProps) {
   return (
     <TooltipProvider>
       {/* Mobile top bar */}
-      <div className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-line bg-canvas/90 px-3 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-30 flex h-12 items-center gap-2 border-b border-line bg-canvas/90 px-3 backdrop-blur lg:hidden">
         <D.Root open={mobileOpen} onOpenChange={setMobileOpen}>
           <D.Trigger className="grid size-8 place-items-center rounded-md text-ink-2 hover:bg-subtle" aria-label="Apri il menu">
             <MenuIcon className="size-[18px]" />
@@ -75,7 +75,7 @@ export function Sidebar(props: SidebarProps) {
         </D.Root>
         <LogoMark className="size-6" />
         <span className="truncate text-sm font-semibold">{props.organization}</span>
-      </div>
+      </header>
 
       {/* Desktop sidebar */}
       <aside

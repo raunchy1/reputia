@@ -1,5 +1,6 @@
 import { Inbox, SearchX } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { InboxToolbar } from "@/components/reviews/inbox-toolbar";
@@ -59,14 +60,15 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
         {/* Mobile: horizontal status chips */}
         <nav aria-label="Filtri" className="flex gap-1 overflow-x-auto border-b border-line px-3 py-2 lg:hidden">
           {(Object.keys(STATUS_FILTERS) as Array<keyof typeof STATUS_FILTERS>).map((k) => (
-            <a
+            <Link
               key={k}
               href={hrefFor({ stato: k === "da-gestire" ? null : k, r: null })}
+              scroll={false}
               aria-current={status === k ? "true" : undefined}
               className={cn("shrink-0 rounded-md px-2.5 py-1 text-[13px]", status === k ? "bg-ink text-white" : "text-ink-2 hover:bg-subtle")}
             >
               {STATUS_FILTERS[k].label} <span className="tabular-nums opacity-70">{counts.status[k]}</span>
-            </a>
+            </Link>
           ))}
         </nav>
       </aside>
@@ -89,7 +91,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
         ) : (
           <ul className="min-h-0 flex-1 overflow-y-auto">
             {reviews.map((r) => (
-              <ReviewRow key={r.id} review={r} href={hrefFor({ r: r.id })} selected={selected?.id === r.id} showLocation={showLocation} />
+              <ReviewRow key={r.id} review={r} href={hrefFor({ r: r.id })} selected={selectedId === r.id} autoSelected={!selectedId && selected?.id === r.id} showLocation={showLocation} />
             ))}
           </ul>
         )}

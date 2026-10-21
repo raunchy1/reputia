@@ -80,7 +80,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           </Metric>
           <Metric label="Recensioni" value={String(stats.total)} note={`${stats.recent} negli ultimi 30 giorni`} />
           <Metric label="Da gestire" value={String(toHandle)} note={counts.status["da-approvare"] ? `${counts.status["da-approvare"]} in attesa di approvazione` : "In attesa di risposta"} />
-          <Metric label="Tasso di risposta" value={`${stats.responseRate}%`} note={`${stats.published} risposte pubblicate`} />
+          <Metric label="Tasso di risposta" value={`${stats.responseRate}%`} note={stats.published === 1 ? "1 risposta pubblicata" : `${stats.published} risposte pubblicate`} />
         </dl>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">

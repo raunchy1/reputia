@@ -1,7 +1,7 @@
 "use client";
 import { ArrowDownUp, Search, X } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { cn } from "@/lib/cn";
 
@@ -17,7 +17,6 @@ export function InboxToolbar({ total }: { total: number }) {
   const params = useSearchParams();
   const [q, setQ] = useState(params.get("q") ?? "");
   const [pending, start] = useTransition();
-  const first = useRef(true);
   const sort = params.get("ordine") ?? "recenti";
 
   function push(patch: Record<string, string | null>) {
@@ -27,11 +26,11 @@ export function InboxToolbar({ total }: { total: number }) {
     start(() => router.replace(`${pathname}?${next}`, { scroll: false }));
   }
 
+  // Only react to an actual change of the query; mounting (twice under StrictMode) must not
+  // rewrite the URL, or the selected review (?r=) would be dropped.
+  const urlQ = params.get("q") ?? "";
   useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
+    if (q.trim() === urlQ) return;
     const t = setTimeout(() => push({ q: q.trim() || null }), 250);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps

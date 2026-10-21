@@ -5,9 +5,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
       <div className="flex flex-col px-5 py-8 sm:px-10">
-        <Logo />
+        <header>
+          <Logo />
+        </header>
         <main className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center py-12 animate-rise">{children}</main>
-        <p className="text-xs text-faint">© {new Date().getFullYear()} Reputia · Fatto in Italia</p>
+        <footer className="text-xs text-faint">© {new Date().getFullYear()} Reputia · Fatto in Italia</footer>
       </div>
       <aside className="relative hidden overflow-hidden bg-ink lg:block" aria-hidden>
         <div className="relative flex h-full flex-col justify-center gap-5 px-14">

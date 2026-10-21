@@ -15,8 +15,8 @@ Token in `app/globals.css` (`@theme`). Nei componenti si usano solo i nomi seman
 | `subtle` | `#F4F4F1` | Hover, righe selezionate, sezioni secondarie |
 | `ink` | `#1B2430` | Testo principale, pulsante primario |
 | `ink-2` | `#3A4553` | Testo forte secondario |
-| `muted` | `#626B7A` | Testo secondario (contrasto 5.4:1 su bianco) |
-| `faint` | `#8B93A1` | Metadati, placeholder (solo testo ≥ 12 px non essenziale) |
+| `muted` | `#545C6A` | Testo secondario (6.6:1 su bianco) |
+| `faint` | `#666E7C` | Metadati, date, placeholder (≥ 4.6:1 su tutte le superfici, verificato con axe) |
 | `line` | `#E8E8E3` | Divisori e bordi |
 | `line-strong` | `#D9D9D2` | Bordi dei campi |
 | `accent` | `#4C51C6` | Unico accento: selezione, AI, link, focus |

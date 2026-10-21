@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type WeekPoint = { weekStart: string; received: number; replied: number };
 
@@ -14,7 +14,16 @@ function niceMax(n: number) {
 /** Grouped weekly columns. Series colours validated with the dataviz checker; identity also via legend + table. */
 export function ActivityChart({ data }: { data: WeekPoint[] }) {
   const [hover, setHover] = useState<number | null>(null);
-  const W = 640;
+  // Draw at the real container width so axis text stays legible on phones instead of shrinking with the SVG.
+  const box = useRef<HTMLDivElement>(null);
+  const [W, setW] = useState(640);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => setW(Math.max(280, Math.round(e.contentRect.width))));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const H = 180;
   const pad = { l: 28, r: 8, t: 12, b: 24 };
   const max = niceMax(Math.max(...data.map((d) => Math.max(d.received, d.replied)), 0));
@@ -47,11 +56,12 @@ export function ActivityChart({ data }: { data: WeekPoint[] }) {
           {active && `Settimana del ${fmt.format(new Date(active.weekStart))}: ${active.received} ricevute · ${active.replied} risposte`}
         </span>
       </figcaption>
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label="Recensioni ricevute e risposte pubblicate per settimana, ultime 12 settimane">
+      <div ref={box}>
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="block max-w-full" role="img" aria-label="Recensioni ricevute e risposte pubblicate per settimana, ultime 12 settimane">
         {ticks.map((t) => (
           <g key={t}>
             <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke="var(--color-line)" strokeWidth={1} />
-            <text x={pad.l - 6} y={y(t) + 3.5} textAnchor="end" className="fill-faint text-[10px] tabular-nums">
+            <text x={pad.l - 6} y={y(t) + 3.5} textAnchor="end" className="fill-faint text-[11px] tabular-nums">
               {t}
             </text>
           </g>
@@ -63,8 +73,8 @@ export function ActivityChart({ data }: { data: WeekPoint[] }) {
               <rect x={pad.l + i * band} y={pad.t} width={band} height={H - pad.t - pad.b} fill={hover === i ? "var(--color-subtle)" : "transparent"} />
               {col(x0, d.received, "var(--color-chart-received)")}
               {col(x0 + bar + 2, d.replied, "var(--color-chart-replied)")}
-              {(i % 3 === 0 || i === data.length - 1) && (
-                <text x={pad.l + i * band + band / 2} y={H - 6} textAnchor="middle" className="fill-faint text-[10px]">
+              {(i % (W < 480 ? 4 : 3) === 0 || i === data.length - 1) && (
+                <text x={pad.l + i * band + band / 2} y={H - 6} textAnchor="middle" className="fill-faint text-[11px]">
                   {fmt.format(new Date(d.weekStart))}
                 </text>
               )}
@@ -72,6 +82,7 @@ export function ActivityChart({ data }: { data: WeekPoint[] }) {
           );
         })}
       </svg>
+      </div>
       <table className="sr-only">
         <caption>Attività settimanale</caption>
         <thead>

@@ -35,6 +35,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-dvh lg:flex">
+      <a href="#contenuto" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60] focus:rounded-md focus:bg-ink focus:px-3 focus:py-2 focus:text-sm focus:text-white">
+        Vai al contenuto
+      </a>
       <Sidebar
         organization={ctx.organization.name}
         user={{ name: ctx.user.name, email: ctx.user.email, role: isRole(ctx.role) ? ROLE_LABELS[ctx.role] : ctx.role }}
@@ -45,9 +48,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         collapsed={collapsed}
       />
       <div className="min-w-0 flex-1 lg:py-2 lg:pr-2">
-        <div className="flex min-h-[calc(100dvh-48px)] flex-col bg-surface lg:min-h-[calc(100dvh-16px)] lg:rounded-[var(--radius-panel)] lg:border lg:border-line lg:shadow-card">
+        <main id="contenuto" tabIndex={-1} className="flex min-h-[calc(100dvh-48px)] flex-col bg-surface focus:outline-none lg:min-h-[calc(100dvh-16px)] lg:rounded-[var(--radius-panel)] lg:border lg:border-line lg:shadow-card">
           {mock > 0 && (
-            <div className="flex items-center justify-center gap-2 border-b border-warning/15 bg-warning-soft px-4 py-1.5 text-center text-xs text-warning lg:rounded-t-[var(--radius-panel)]">
+            <div role="note" className="flex items-center justify-center gap-2 border-b border-warning/15 bg-warning-soft px-4 py-1.5 text-center text-xs text-warning lg:rounded-t-[var(--radius-panel)]">
               <span className="size-1.5 shrink-0 rounded-full bg-warning" aria-hidden />
               <span>
                 <strong className="font-semibold">Simulazione:</strong> recensioni di esempio, nulla viene pubblicato su Google.{" "}
@@ -58,7 +61,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </div>
           )}
           {children}
-        </div>
+        </main>
       </div>
       <Toaster />
     </div>

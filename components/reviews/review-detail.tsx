@@ -21,6 +21,7 @@ export function ReviewDetail({ review, canPublish, backHref }: { review: Review;
         <Link href={backHref} className="-ml-1 flex items-center gap-1 rounded-md px-1.5 py-1 text-[13px] font-medium text-ink-2 hover:bg-subtle">
           <ArrowLeft className="size-4" aria-hidden /> Recensioni
         </Link>
+        <h1 className="sr-only">Recensione di {review.authorName}</h1>
       </div>
       <div className="mx-auto grid max-w-2xl gap-5 px-4 py-6 sm:px-6 lg:py-8">
         <header className="flex items-start gap-3">
