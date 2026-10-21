@@ -2,7 +2,7 @@
 
 ## Staging online
 - **https://reputia.websardegna.xyz** (Coolify, progetto «Reputia», app `npnzodpfmvevrt2gkyvh8ajn`, branch `dev`), certificato Let's Encrypt, DNS A su Spaceship → 13.140.190.190.
-- Variabili impostate: segreti generati, `APP_URL`, `LEGAL_COMPANY_NAME`/`PRODUCT_OF_*` = WebSardegna. Mancano SMTP (registrazioni sospese), AI, Google, Stripe.
+- Variabili impostate: segreti generati, `APP_URL`, `LEGAL_COMPANY_NAME`/`PRODUCT_OF_*` = WebSardegna. SMTP attivo (Resend). Mancano AI, Google, Stripe.
 - Il deploy non parte da solo al push (repo pubblico senza webhook): ridistribuire da Coolify o via API.
 
 ## Funziona ed è verificato
@@ -28,7 +28,7 @@
 ## Non ancora completo
 | Blocco | Cosa serve |
 |--------|------------|
-| Email transazionali | Provider SMTP (`SMTP_URL`) — senza, le registrazioni sono sospese |
+| Email transazionali | **Configurate (21/10/2026)**: Resend, regione UE (eu-west-1), mittente `noreply@reputia.websardegna.xyz`, DKIM/SPF/DMARC su Spaceship, chiave «sending only» limitata al dominio. Tracking dei clic non attivo (link non riscritti). |
 | Google | Richiesta di accesso API inviata il 20/10/2026 (caso **6-9644000042113**, progetto Cloud `reputia-512221` n. 937045868547, profilo WebSardegna). Attesa 7–10 giorni lavorativi. Poi: abilitare `mybusiness.googleapis.com` (v4), schermata di consenso OAuth e verifica dello scope `business.manage` |
 | Stripe | Sandbox, prezzo, webhook; registrazione IVA in Stripe Tax; **fatturazione elettronica SDI** |
 | Pagine legali | Dati societari (`LEGAL_*`) e revisione da parte di un professionista |
