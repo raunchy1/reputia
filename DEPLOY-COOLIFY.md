@@ -34,7 +34,7 @@ Funzionalità (vuote = disattivate, l'app lo segnala in modo chiaro):
 
 | Variabile | Effetto |
 |-----------|---------|
-| `ANTHROPIC_API_KEY`, `AI_MODEL` | Generazione delle bozze. Senza chiave in produzione la generazione restituisce un errore esplicito |
+| `AI_PROVIDER`, `DEEPSEEK_API_KEY`, `AI_MODEL` | Generazione delle bozze. Provider attuale: `deepseek`, modello predefinito `deepseek-flash` (alternativa `deepseek-v4-pro`). Con `AI_PROVIDER=anthropic` serve `ANTHROPIC_API_KEY`. Senza chiave in produzione la generazione restituisce un errore esplicito. `AI_PRICE_INPUT_USD_MTOK`/`AI_PRICE_OUTPUT_USD_MTOK` (USD per milione di token) servono solo alla stima interna dei costi |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Collegamento Google Business Profile (vedi §4). Senza, è disponibile solo la simulazione |
 | `STRIPE_*` | Abbonamenti (vedi §5) |
 | `LEGAL_*`, `DEMO_BOOKING_URL`, `LEADS_NOTIFY_EMAIL` | Dati societari nelle pagine legali, link di prenotazione demo, notifica dei lead |

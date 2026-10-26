@@ -23,7 +23,7 @@
 
 ## Simulato (dichiarato come tale nell'interfaccia)
 - **Google Business Profile**: approvato e verificato contro Google (vedi tabella). Resta non provata solo la **pubblicazione di una risposta reale** su una recensione: non è stata fatta per non scrivere in pubblico sui profili del titolare. La modalità simulazione resta disponibile, carica 12 recensioni di esempio e non invia nulla a Google.
-- **AI senza chiave**: in sviluppo, senza `ANTHROPIC_API_KEY`, le bozze sono testi di esempio marcati «Bozza di sviluppo». In produzione senza chiave la generazione restituisce un errore esplicito. **La chiamata reale a Claude non è stata eseguita** (nessuna chiave su questa macchina).
+- **AI**: provider **DeepSeek** (`AI_PROVIDER=deepseek`, modello `deepseek-flash`, API compatibile OpenAI, effort basso), Anthropic resta selezionabile con `AI_PROVIDER=anthropic`. **Verificato il 26/10/2026 con chiamate reali** dal `.env` locale: bozza per recensione a 5 stelle e a 1 stella con richiesta di rimborso, nessun rimborso promesso, firma corretta, circa 500 token in ingresso e 100-260 in uscita, 1,5-3 s. Chiave DeepSeek **non ancora impostata in Coolify**. Senza chiave, in sviluppo le bozze sono testi di esempio marcati «Bozza di sviluppo»; in produzione la generazione restituisce un errore esplicito. Prezzi DeepSeek non codificati: impostare `AI_PRICE_*` per la stima interna dei costi. Privacy aggiornata: DeepSeek (Cina) tra i responsabili, trasferimento extra SEE su clausole contrattuali standard, da firmare e da far rivedere al professionista.
 
 ## Non ancora completo
 | Blocco | Cosa serve |

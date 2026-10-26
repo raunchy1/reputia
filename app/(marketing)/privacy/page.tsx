@@ -34,14 +34,15 @@ export default function PrivacyPage() {
       <p>I dati sono trattati da fornitori che agiscono come responsabili del trattamento, vincolati da accordi conformi all&apos;art. 28 GDPR:</p>
       <ul>
         <li>fornitore di hosting e infrastruttura server;</li>
-        <li>Anthropic, per la generazione delle bozze di risposta;</li>
+        <li>DeepSeek, con sede in Cina, per la generazione delle bozze di risposta;</li>
         <li>Google, per la lettura delle recensioni e la pubblicazione delle risposte tramite Google Business Profile;</li>
         <li>Stripe, per i pagamenti e la fatturazione;</li>
         <li>fornitore del servizio di invio email.</li>
       </ul>
       <p>
         Alcuni fornitori possono trattare dati al di fuori dello Spazio economico europeo: in tal caso il trasferimento avviene sulla base di decisioni di adeguatezza o
-        delle clausole contrattuali standard della Commissione europea.
+        delle clausole contrattuali standard della Commissione europea. Per la Cina, dove opera DeepSeek, non esiste una decisione di adeguatezza: il trasferimento
+        avviene sulla base delle clausole contrattuali standard e riguarda solo i dati necessari a generare la bozza.
       </p>
       <h2>Conservazione</h2>
       <ul>
