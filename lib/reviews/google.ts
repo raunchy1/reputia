@@ -1,7 +1,57 @@
 import "server-only";
-import { ProviderAuthError, ProviderError, type ProviderLocation, type ReviewPage, type ReviewProvider } from "@/lib/reviews/types";
+import { ProviderAuthError, ProviderConfigError, ProviderError, ProviderRateLimitError, type ProviderLocation, type ReviewPage, type ReviewProvider } from "@/lib/reviews/types";
 
 const STARS: Record<string, number> = { ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5 };
+const MAX_ATTEMPTS = 3;
+const MAX_RETRY_WAIT_MS = 9_000;
+
+function safeMessage(message: string, accessToken: string): string {
+  // Rimuove le credenziali prima del troncamento, anche dalle risposte non JSON.
+  return (accessToken ? message.split(accessToken).join("[omesso]") : message)
+    .replace(/Bearer\s+[^\s"'<>]+/gi, "Bearer [omesso]")
+    .replace(/((?:access_token|refresh_token|id_token|client_secret|authorization)["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^\s,;&}]+)/gi, "$1[omesso]")
+    .replace(/\b(?:ya29\.[\w.-]+|1\/\/[\w.-]+|eyJ[\w-]+\.[\w-]+\.[\w-]+)/g, "[omesso]")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200);
+}
+
+function googleError(status: number, body: string, url: string, accessToken: string): ProviderError {
+  let code: unknown;
+  let googleStatus: unknown;
+  let message = body;
+  let reasons: unknown[] = [];
+  try {
+    const json = JSON.parse(body);
+    const error = json?.error;
+    code = error?.code;
+    googleStatus = typeof error === "string" ? error : error?.status;
+    if (typeof error?.message === "string") message = error.message;
+    if (Array.isArray(error?.details)) reasons = error.details.map((detail: { reason?: unknown } | null) => detail?.reason);
+  } catch {
+    // Google o un proxy possono rispondere con testo semplice.
+  }
+  const signals = [googleStatus, ...reasons];
+  if (status === 401 || code === 401 || signals.includes("UNAUTHENTICATED") || signals.includes("invalid_grant")) {
+    return new ProviderAuthError("L'autorizzazione Google non è più valida. Ricollega l'account.");
+  }
+  if (status === 429 || code === 429 || signals.includes("RESOURCE_EXHAUSTED") || signals.includes("RATE_LIMIT_EXCEEDED") || signals.includes("QUOTA_EXCEEDED")) {
+    return new ProviderRateLimitError("Limite di richieste Google raggiunto. Riprova tra poco.");
+  }
+  if (signals.includes("SERVICE_DISABLED") || signals.includes("PERMISSION_DENIED")) {
+    return new ProviderConfigError(`Accesso all'API ${new URL(url).hostname} non abilitato per il progetto Google Cloud. Contatta l'amministratore.`);
+  }
+  const detail = safeMessage(message, accessToken);
+  return new ProviderError(`Errore Google (${status}). ${detail || "Riprova più tardi."}`, status >= 500 && status < 600);
+}
+
+function retryAfterMs(value: string | null): number {
+  if (!value) return 0;
+  const seconds = Number(value);
+  if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
+  const date = Date.parse(value);
+  return Number.isFinite(date) ? Math.max(0, date - Date.now()) : 0;
+}
 
 type GoogleReview = {
   name: string;
@@ -25,19 +75,40 @@ export class GoogleReviewProvider implements ReviewProvider {
   constructor(private readonly getAccessToken: () => Promise<string>) {}
 
   private async call<T>(url: string, init?: RequestInit): Promise<T> {
-    const res = await fetch(url, {
-      ...init,
-      headers: { Authorization: `Bearer ${await this.getAccessToken()}`, "Content-Type": "application/json", ...init?.headers },
-      cache: "no-store",
-    });
-    if (res.status === 401 || res.status === 403) {
-      const detail = await res.text().catch(() => "");
-      throw new ProviderAuthError(`Google ha rifiutato l'accesso (${res.status}). ${detail.slice(0, 200)}`);
+    const accessToken = await this.getAccessToken();
+    let waited = 0;
+    // Tre tentativi totali; al massimo 9 secondi di attesa fra i tentativi.
+    for (let attempt = 0; ; attempt++) {
+      let res: Response | undefined;
+      try {
+        let body: string;
+        try {
+          res = await fetch(url, {
+            ...init,
+            headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json", ...init?.headers },
+            cache: "no-store",
+          });
+          body = await res.text();
+        } catch {
+          throw new ProviderError("Impossibile contattare Google. Riprova tra poco.", true);
+        }
+        if (!res.ok) throw googleError(res.status, body, url, accessToken);
+        if (res.status === 204 || !body) return undefined as T;
+        try {
+          return JSON.parse(body) as T;
+        } catch {
+          throw new ProviderError("Google ha restituito una risposta non valida. Riprova più tardi.");
+        }
+      } catch (error) {
+        if (!(error instanceof ProviderError) || !error.retryable || attempt >= MAX_ATTEMPTS - 1) throw error;
+        if (res && res.status >= 400 && res.status < 500 && res.status !== 429) throw error;
+        const delay = Math.max(500 * 2 ** attempt * (1 + Math.random()), retryAfterMs(res?.headers.get("Retry-After") ?? null));
+        // Se Retry-After supera il budget, termina senza anticipare la richiesta.
+        if (waited + delay > MAX_RETRY_WAIT_MS) throw error;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        waited += delay;
+      }
     }
-    if (!res.ok) throw new ProviderError(`Errore Google ${res.status}: ${(await res.text().catch(() => "")).slice(0, 200)}`);
-    if (res.status === 204) return undefined as T;
-    const text = await res.text();
-    return (text ? JSON.parse(text) : undefined) as T;
   }
 
   async listLocations(): Promise<ProviderLocation[]> {
@@ -54,7 +125,7 @@ export class GoogleReviewProvider implements ReviewProvider {
         }>(`https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?${params}`);
         for (const loc of page.locations ?? []) {
           const address = [...(loc.storefrontAddress?.addressLines ?? []), loc.storefrontAddress?.locality].filter(Boolean).join(", ");
-          // v4 reviews need the account-qualified name: accounts/{a}/locations/{l}
+          // Le recensioni v4 richiedono il nome completo: accounts/{a}/locations/{l}.
           result.push({ externalId: `${account.name}/${loc.name}`, name: loc.title, address: address || undefined });
         }
         pageToken = page.nextPageToken;

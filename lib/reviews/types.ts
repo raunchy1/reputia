@@ -23,5 +23,16 @@ export interface ReviewProvider {
   deleteReply(locationExternalId: string, reviewExternalId: string): Promise<void>;
 }
 
-export class ProviderAuthError extends UserError {}
-export class ProviderError extends Error {}
+export class ProviderError extends UserError {
+  constructor(message: string, readonly retryable = false) {
+    super(message);
+  }
+}
+
+export class ProviderAuthError extends ProviderError {}
+export class ProviderConfigError extends ProviderError {}
+export class ProviderRateLimitError extends ProviderError {
+  constructor(message: string) {
+    super(message, true);
+  }
+}

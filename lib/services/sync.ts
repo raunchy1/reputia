@@ -13,12 +13,17 @@ const MAX_PAGES = 20;
  * only reviews already synced and unchanged, so routine syncs are incremental.
  */
 export async function syncLocation(ctx: OrgContext, locationId: string): Promise<{ created: number; updated: number }> {
+  return syncLocationById(ctx.organization.id, locationId);
+}
+
+/** Sincronizza una sede senza sessione, mantenendo il vincolo sull'organizzazione. */
+export async function syncLocationById(organizationId: string, locationId: string): Promise<{ created: number; updated: number }> {
   const location = await db.location.findFirst({
-    where: { id: locationId, organizationId: ctx.organization.id, archivedAt: null },
+    where: { id: locationId, organizationId, archivedAt: null },
     include: { connection: true },
   });
   if (!location?.connection || !location.externalLocationId) throw new UserError("Questa sede non è collegata a Google.");
-  await assertCanWrite(ctx.organization.id);
+  await assertCanWrite(organizationId);
   const provider = providerFor(location.connection, location.name);
   const source = location.connection.provider === "MOCK" ? "MOCK" : "GOOGLE";
 
@@ -42,7 +47,7 @@ export async function syncLocation(ctx: OrgContext, locationId: string): Promise
           await db.review.create({
             data: {
               ...remote,
-              organizationId: ctx.organization.id,
+              organizationId,
               locationId: location.id,
               source,
               externalId: r.externalId,

@@ -45,13 +45,24 @@ Funzionalità (vuote = disattivate, l'app lo segnala in modo chiaro):
 - Registrazione → email di verifica ricevuta → onboarding → simulazione → bozza → pubblicazione simulata.
 
 ## 4. Google Business Profile
-1. Google Cloud → nuovo progetto → richiedi l'accesso alle **Business Profile APIs** (modulo di richiesta GBP API; l'approvazione non è automatica).
-2. Abilita: My Business Account Management API, My Business Business Information API, Google My Business API (v4, recensioni).
-3. Schermata di consenso OAuth con scope `https://www.googleapis.com/auth/business.manage` (scope sensibile: serve la verifica dell'app da parte di Google prima dell'uso pubblico).
-4. Credenziali OAuth "Applicazione web", redirect URI: `${APP_URL}/api/google/callback`.
-5. Imposta `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` e ridistribuisci.
+Stato verificato il **26/10/2026**:
+- Accesso alle **Business Profile APIs approvato** per il progetto `reputia-512221` (n. 937045868547).
+- API abilitate: My Business Account Management API, My Business Business Information API e `mybusiness.googleapis.com` (v4, recensioni).
+- Client OAuth **«Reputia Web»**, tipo **Applicazione web**, creato. Redirect URI: `${APP_URL}/api/google/callback`.
+- Schermata di consenso configurata, app pubblicata (**In production**); scope `https://www.googleapis.com/auth/business.manage` elencato come **non sensibile**.
+- `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` sono già nel `.env` locale. Impostarli anche nelle variabili Coolify e ridistribuire, senza copiarne i valori nel repository.
 
-Finché l'accesso non è approvato, Reputia funziona in **modalità simulazione**, chiaramente etichettata nell'interfaccia.
+Per la sincronizzazione pianificata, genera `CRON_SECRET` con `openssl rand -base64 32`, impostalo nelle variabili Coolify e ridistribuisci. Configura uno scheduler esterno (per esempio cron) per eseguire periodicamente:
+
+```bash
+curl -X POST -H "x-cron-secret: $CRON_SECRET" https://<domain>/api/cron/sync
+```
+
+Lo scheduler deve ricevere `CRON_SECRET` dal proprio ambiente. Senza segreto configurato, o con header assente/errato, l'endpoint restituisce **401**. Ogni chiamata sincronizza le sedi non archiviate con collegamento Google attivo, con massimo tre sync contemporanee e controllo dell'abbonamento. La risposta contiene i conteggi `synced` e `failed` e `results` con `{locationId, created, updated, error?}`; una sede fallita non blocca le altre.
+
+Il provider esegue al massimo **3 tentativi totali** per 429, 5xx o errori di rete, con backoff esponenziale da circa 500 ms e jitter. Rispetta `Retry-After` (secondi o data HTTP); se supera il budget cumulativo di 9 secondi di attesa, termina senza riprovare in anticipo. Gli altri 4xx non vengono ritentati. Gli errori di configurazione API non richiedono di ricollegare l'account.
+
+La modalità simulazione rimane disponibile ed è etichettata nell'interfaccia. Il collegamento e la sincronizzazione reali sono stati verificati end-to-end **prima** del deploy (59 recensioni importate, secondo giro incrementale senza modifiche, token rinnovato). Dopo il deploy resta da rifare la stessa prova dal browser con una sede reale e, se serve, provare la pubblicazione di una risposta su una recensione di prova.
 
 ## 5. Stripe (sempre in modalità test fino all'approvazione del titolare)
 1. Crea un **sandbox** Stripe e una chiave **ristretta** (`rk_test_…`) con accesso a Customers, Checkout Sessions, Billing Portal, Subscriptions, Subscription Items (scrittura) e Invoices (lettura).

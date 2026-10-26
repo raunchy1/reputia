@@ -22,17 +22,17 @@
 | Backup giornaliero del database | Container `backup`, primo dump creato |
 
 ## Simulato (dichiarato come tale nell'interfaccia)
-- **Google Business Profile**: il provider reale è implementato secondo la documentazione ufficiale (OAuth, refresh token, sync paginata, pubblicazione), ma **non è stato provato contro Google** perché serve un progetto GBP approvato. Nel frattempo la modalità simulazione carica 12 recensioni di esempio e non invia nulla a Google.
+- **Google Business Profile**: approvato e verificato contro Google (vedi tabella). Resta non provata solo la **pubblicazione di una risposta reale** su una recensione: non è stata fatta per non scrivere in pubblico sui profili del titolare. La modalità simulazione resta disponibile, carica 12 recensioni di esempio e non invia nulla a Google.
 - **AI senza chiave**: in sviluppo, senza `ANTHROPIC_API_KEY`, le bozze sono testi di esempio marcati «Bozza di sviluppo». In produzione senza chiave la generazione restituisce un errore esplicito. **La chiamata reale a Claude non è stata eseguita** (nessuna chiave su questa macchina).
 
 ## Non ancora completo
 | Blocco | Cosa serve |
 |--------|------------|
 | Email transazionali | **Configurate (21/10/2026)**: Resend, regione UE (eu-west-1), mittente `noreply@reputia.websardegna.xyz`, DKIM/SPF/DMARC su Spaceship, chiave «sending only» limitata al dominio. Tracking dei clic non attivo (link non riscritti). |
-| Google | Richiesta di accesso API inviata il 20/10/2026 (caso **6-9644000042113**, progetto Cloud `reputia-512221` n. 937045868547, profilo WebSardegna). Attesa 7–10 giorni lavorativi. Poi: abilitare `mybusiness.googleapis.com` (v4), schermata di consenso OAuth e verifica dello scope `business.manage` |
+| Google | **Approvato, configurato e verificato contro Google (26/10/2026)**: progetto Cloud `reputia-512221` n. 937045868547, `mybusiness.googleapis.com` (v4, recensioni) abilitata insieme alle API v1. Client OAuth web «Reputia Web», app **In production**, scope `business.manage` non sensibile. Prova reale: consenso OAuth completato, refresh token ottenuto, `GET /v1/accounts` → 1 account, `/v1/{account}/locations` → 3 sedi, `v4/{account}/{location}/reviews` → 5 recensioni; sync end-to-end su Postgres locale: **59 recensioni importate** (paginazione inclusa), risposte già presenti su Google importate come `PUBLISHED`, secondo giro incrementale `created: 0, updated: 0`, token rinnovato automaticamente e collegamento ancora `ACTIVE`. `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`/`CRON_SECRET` impostati in Coolify (staging) e nel `.env` locale. |
 | Stripe | Sandbox, prezzo, webhook; registrazione IVA in Stripe Tax; **fatturazione elettronica SDI** |
 | Pagine legali | Dati societari (`LEGAL_*`) e revisione da parte di un professionista |
-| Sincronizzazione automatica | Oggi la sync è manuale (pulsante) o al collegamento. Serve un job pianificato |
+| Sincronizzazione automatica | Endpoint `POST /api/cron/sync` implementato e con segreto `CRON_SECRET` impostato su staging: sedi Google attive non archiviate, massimo tre sync concorrenti, isolamento degli errori. Manca solo la pianificazione della chiamata sul server (cron di Coolify o cron esterno, vedi `DEPLOY-COOLIFY.md` §4). |
 | Notifiche | Email al titolare per nuove recensioni negative |
 | Monitoraggio errori | Sentry o equivalente (oggi solo log del container) |
 | Eliminazione account / export dati GDPR | Oggi su richiesta via email |
