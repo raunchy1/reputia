@@ -37,3 +37,11 @@ describe("prompts", () => {
     expect(buildUserPrompt({ authorName: "X", rating: 5, comment: null })).toContain("solo la valutazione");
   });
 });
+
+describe("lingua rumena", () => {
+  it("chiede il rumeno con i diacritici", () => {
+    const p = buildSystemPrompt({ ...base, language: "ro" });
+    expect(p).toContain("rumeno");
+    expect(p).toContain("ș, ț");
+  });
+});

@@ -28,7 +28,7 @@ export async function saveToneAction(_: ActionState, form: FormData): Promise<Ac
         replyLength: z.enum(ReplyLength),
         businessContext: z.string().trim().max(1500).default(""),
         signature: z.string().trim().max(120).default(""),
-        replyLanguage: z.enum(["it", "auto", "en", "de", "fr", "es"]).default("it"),
+        replyLanguage: z.enum(["it", "auto", "en", "de", "fr", "es", "ro"]).default("it"),
         customInstructions: z.string().trim().max(600).default(""),
       })
       .parse(Object.fromEntries(form));

@@ -41,6 +41,7 @@ export const LANGUAGE_LABELS: Record<string, string> = {
   de: "Tedesco",
   fr: "Francese",
   es: "Spagnolo",
+  ro: "Rumeno",
 };
 
 const LANGUAGE_GUIDE: Record<string, string> = {
@@ -50,6 +51,7 @@ const LANGUAGE_GUIDE: Record<string, string> = {
   de: "Scrivi sempre in tedesco corretto e naturale",
   fr: "Scrivi sempre in francese corretto e naturale",
   es: "Scrivi sempre in spagnolo corretto e naturale",
+  ro: "Scrivi sempre in rumeno corretto e naturale, con i diacritici (ă, â, î, ș, ț)",
 };
 
 export type PromptInput = {
