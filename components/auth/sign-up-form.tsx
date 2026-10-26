@@ -35,7 +35,7 @@ export function SignUpForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-8 grid gap-5" noValidate>
+    <form method="post" onSubmit={onSubmit} className="mt-8 grid gap-5" noValidate>
       {error && <Notice tone="danger">{error}</Notice>}
       <Field label="Nome e cognome" htmlFor="name">
         <Input id="name" name="name" autoComplete="name" required maxLength={80} />

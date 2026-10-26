@@ -33,7 +33,7 @@ export function SignInForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-8 grid gap-5" noValidate>
+    <form method="post" onSubmit={onSubmit} className="mt-8 grid gap-5" noValidate>
       {params.get("reimpostata") && <Notice tone="positive">Password aggiornata. Accedi con la nuova password.</Notice>}
       {error && (
         <Notice tone="danger">

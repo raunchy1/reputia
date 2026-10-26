@@ -24,7 +24,7 @@ export function ResendVerification({ defaultEmail }: { defaultEmail: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-8 grid gap-4 border-t border-line pt-8">
+    <form method="post" onSubmit={onSubmit} className="mt-8 grid gap-4 border-t border-line pt-8">
       <p className="text-sm text-muted">Non è arrivata? Controlla nello spam oppure invia di nuovo il link.</p>
       {state === "sent" && <Notice tone="positive">Se l&apos;indirizzo è registrato, riceverai un nuovo link entro pochi minuti.</Notice>}
       {error && <Notice tone="danger">{error}</Notice>}

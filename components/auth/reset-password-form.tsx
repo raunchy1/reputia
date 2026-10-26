@@ -26,7 +26,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-8 grid gap-5">
+    <form method="post" onSubmit={onSubmit} className="mt-8 grid gap-5">
       {error && <Notice tone="danger">{error}</Notice>}
       <Field label="Nuova password" htmlFor="password" hint="Almeno 10 caratteri.">
         <Input id="password" name="password" type="password" autoComplete="new-password" required minLength={10} />

@@ -32,7 +32,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-8 grid gap-5">
+    <form method="post" onSubmit={onSubmit} className="mt-8 grid gap-5">
       {error && <Notice tone="danger">{error}</Notice>}
       <Field label="Email" htmlFor="email">
         <Input id="email" name="email" type="email" autoComplete="email" required />
