@@ -58,6 +58,8 @@ export async function createCheckout(ctx: OrgContext): Promise<string> {
       ...(keepTrial ? { trial_end: Math.floor(entitlement.trialEndsAt.getTime() / 1000) } : {}),
     },
     automatic_tax: { enabled: automaticTaxEnabled() },
+    // Prezzo fisso in euro: niente conversione automatica di valuta (Adaptive Pricing) con commissione al cliente.
+    adaptive_pricing: { enabled: false },
     integration_identifier: "reputia-starter-qmvhtzrk",
     tax_id_collection: { enabled: true },
     customer_update: { address: "auto", name: "auto" },
