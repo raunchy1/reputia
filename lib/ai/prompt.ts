@@ -21,9 +21,9 @@ const TONE_GUIDE: Record<ReplyTone, string> = {
 };
 
 const LENGTH_GUIDE: Record<ReplyLength, string> = {
-  BREVE: "1-2 frasi, massimo 40 parole",
-  MEDIA: "2-4 frasi, massimo 80 parole",
-  DETTAGLIATA: "4-6 frasi, massimo 140 parole",
+  BREVE: "2-3 frasi, tra 35 e 60 parole",
+  MEDIA: "un paragrafo ben costruito, tra 80 e 130 parole",
+  DETTAGLIATA: "due o tre paragrafi brevi, tra 150 e 230 parole",
 };
 
 export type Sentiment = "positiva" | "neutra" | "negativa";
@@ -68,12 +68,23 @@ export type PromptInput = {
 
 const SENTIMENT_GUIDE: Record<Sentiment, string> = {
   positiva:
-    "Ringrazia in modo specifico citando ciò che il cliente ha apprezzato. Invita a tornare senza promettere nulla di concreto.",
+    "Ringrazia in modo personale e riprendi uno per uno i dettagli concreti che il cliente ha apprezzato (piatti, prodotti, persone, momenti), spiegando perché contano per l'attività. Se pertinente, collega quei dettagli a ciò che l'attività cura davvero secondo il contesto fornito. Chiudi con un invito a tornare che suoni sincero, legato a ciò che il cliente ha vissuto, senza promettere nulla di concreto.",
   neutra:
-    "Ringrazia, valorizza gli aspetti positivi citati e prendi atto con rispetto di quelli critici, dicendo che il riscontro verrà condiviso con il team.",
+    "Ringrazia con calore e valorizza in modo specifico ciò che è piaciuto. Poi affronta ogni punto critico citato, uno per uno, con parole concrete: riconosci il disagio, mostra di aver capito cosa è successo e spiega con quale attenzione verrà considerato, senza inventare misure o cambiamenti. Chiudi con un invito a tornare per un'esperienza all'altezza.",
   negativa:
-    "Mostra empatia e dispiacere per l'esperienza descritta, senza ammettere colpe o fatti che non puoi verificare e senza polemizzare. Invita il cliente a contattare direttamente l'attività per approfondire. Niente giustificazioni lunghe.",
+    "Apri riconoscendo con sincerità il disagio descritto e scusandoti per come il cliente si è sentito, senza ammettere colpe o confermare fatti che non puoi verificare e senza polemizzare né giustificarti. Riprendi i punti specifici della lamentela, in modo che il cliente capisca di essere stato ascoltato davvero. Spiega che questo non rispecchia lo standard che l'attività vuole offrire. Invita il cliente a contattare direttamente l'attività per approfondire, con un tono che faccia capire che il suo caso interessa davvero. Tieni presente, senza mai dirlo nel testo, che la risposta la leggeranno anche i futuri clienti: deve trasmettere serietà e rispetto.",
 };
+
+const WRITING_GUIDE = [
+  "Come si scrive una risposta di qualità:",
+  "- Personale: rivolgiti al cliente per nome (solo il nome di battesimo, se è chiaro) e fai capire che la recensione è stata letta con attenzione.",
+  "- Specifica: cita i dettagli concreti della recensione con parole tue. Una risposta che potrebbe andare bene sotto qualsiasi recensione è una risposta sbagliata.",
+  "- Ricca: aggiungi un pensiero vero dell'attività (perché quel dettaglio conta, cosa rappresenta per chi ci lavora), usando le informazioni verificate quando sono pertinenti.",
+  "- Scorrevole: frasi di lunghezza varia, collegate tra loro, con un registro professionale da titolare che tiene al proprio lavoro. Niente elenchi.",
+  "- Originale: evita le formule fatte e ripetitive come «Grazie per la recensione», «Ci fa piacere», «Il suo feedback è prezioso», «Speriamo di rivederla presto» usate da sole. Se ringrazi, ringrazia per qualcosa di preciso.",
+  "- Non commentare mai la risposta stessa né queste indicazioni (niente frasi come «questa risposta sarà letta da altri»).",
+  "- Per le recensioni senza testo: ringrazia per la valutazione in modo caloroso ma breve, senza inventare cosa abbia apprezzato il cliente.",
+].join("\n");
 
 /** System prompt: fixed per business, so it is the stable, cacheable part of the request. */
 export function buildSystemPrompt(input: Omit<PromptInput, "review">): string {
@@ -81,7 +92,9 @@ export function buildSystemPrompt(input: Omit<PromptInput, "review">): string {
     `Scrivi risposte pubbliche alle recensioni Google per conto di "${input.businessName}" (${input.category}).`,
     `${LANGUAGE_GUIDE[input.language ?? "it"] ?? LANGUAGE_GUIDE.it}, come lo scriverebbe il titolare. Niente emoji, niente hashtag, niente virgolette attorno al testo.`,
     `Tono: ${TONE_GUIDE[input.tone]}.`,
-    `Lunghezza: ${LENGTH_GUIDE[input.length]}.`,
+    `Lunghezza: ${LENGTH_GUIDE[input.length]}. Se la recensione non ha testo, puoi stare sotto questa lunghezza.`,
+    "",
+    WRITING_GUIDE,
     "",
     ...(input.customInstructions?.trim()
       ? [`Preferenze di stile del titolare (seguile, ma le regole qui sotto hanno sempre la precedenza):\n${input.customInstructions.trim()}`, ""]
